@@ -5,6 +5,19 @@
 
 namespace Tags
 {
+	namespace Characters
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player)
+	}
+	namespace EventTasks
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(SpawnProjectile)
+	}
+
+	namespace Projectiles
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(FireBall)
+	}
 	namespace UIMassage
 	{
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(UIMassage)
@@ -25,5 +38,9 @@ namespace Tags
 		{
 			UE_DECLARE_GAMEPLAY_TAG_EXTERN(AttackMove)
 		}
+	}
+	namespace Montages
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(AttackMontage)
 	}
 }

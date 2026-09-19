@@ -3,13 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "NativeGameplayTags.h"
 #include "Engine/DataAsset.h"
+#include "GameplayTags.h"
 #include "AuraData.generated.h"
 
+class UNiagaraSystem;
+class AProjectile;
 class UGameplayAbility;
 class UGameplayEffect;
-struct FGameplayTag;
 class UInputAction;
 class UInputMappingContext;
 
@@ -28,6 +29,10 @@ USTRUCT(Blueprintable) struct FCharacterBaseData
 	TArray<TSubclassOf<UGameplayEffect>> StartupAttributes;
 	UPROPERTY(EditDefaultsOnly)
 	float EffectLevel;
+	UPROPERTY(EditDefaultsOnly)
+	FName WeaponSocketName;
+	UPROPERTY(EditDefaultsOnly)
+	FName MotionWarpingTargetName;
 };
 USTRUCT(Blueprintable) struct FAuraPlayerData
 {
@@ -89,6 +94,34 @@ USTRUCT(Blueprintable) struct FUIMassageData
 	UPROPERTY(EditDefaultsOnly)
 	UTexture2D* MassageImage;
 };
+USTRUCT(Blueprintable) struct FMontageData
+{
+	GENERATED_BODY()
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FGameplayTag,UAnimMontage*> MontageToPlay;
+};
+
+USTRUCT()
+struct FProjectileAssets
+{
+	GENERATED_BODY()
+	UPROPERTY(EditDefaultsOnly)
+    TSubclassOf<AProjectile> ProjectileClass;
+    UPROPERTY(EditDefaultsOnly)
+    USoundBase* HitSoundEffect;
+    UPROPERTY(EditDefaultsOnly)
+    UNiagaraSystem* HitFXEffect;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> ProjectileEffect;
+};
+USTRUCT(Blueprintable) struct FProjectileData
+{
+	GENERATED_BODY()
+	UPROPERTY(EditDefaultsOnly)
+	FName ProjectileProfileName;
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FGameplayTag,FProjectileAssets> ProjectileAssets;
+};
 UCLASS(Blueprintable)
 class AURA_API UAuraData : public UDataAsset
 {
@@ -108,4 +141,8 @@ public:
 	TMap<FString,FLevelUpData> LevelUpData;
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FUIMassageData> MassageData;
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FGameplayTag,FMontageData> Montages;
+	UPROPERTY(EditDefaultsOnly)
+	FProjectileData ProjectileData;
 };

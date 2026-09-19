@@ -1,10 +1,2 @@
-﻿4- finish implementation of character movement and naivagation system 
-5- finish implementation of flexable input system for abilites and movements 
-6- integrate abilites and give them to the character and activate them with inputs or when start game 
-7- implement projectile class for first ability
-
-**chapeter 10 sections**
-1- ability system 
-2- flexabel inputs 
-3- click to move 
-4- projectile system 
+﻿3- Hitreact ability and death cosmatics 
+4- damage system

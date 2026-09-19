@@ -11,7 +11,7 @@ void UTextWithNumsWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	AttributeName->SetText(FText::FromString(Attribute));
-	UUtilities::GetAuraSubSystem(this)->OnAttributeChangedSelf.AddLambda([this](FString attributeName, int8 attributeAmount)
+	UUtilities::GetAuraSubSystem(this)->OnAttributeChangedPlayer.AddLambda([this](FString attributeName, int8 attributeAmount)
 	{
 		if (attributeName == Attribute)
 			AttributeAmount->SetText(FText::FromString(FString::Printf(TEXT("%i"), attributeAmount)));

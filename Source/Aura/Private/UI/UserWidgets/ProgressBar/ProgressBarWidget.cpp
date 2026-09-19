@@ -2,7 +2,6 @@
 
 
 #include "UI/UserWidgets/ProgressBar/ProgressBarWidget.h"
-
 #include "Components/ProgressBar.h"
 #include "Statics/Utilities.h"
 
@@ -14,11 +13,23 @@ void UProgressBarWidget::NativeOnInitialized()
 	else if (Attribute == "Mana")
 		MaxAttribute = "MaxMana";
 	ProgressBar->SetPercent(1.0f);
-	UUtilities::GetAuraSubSystem(this)->OnAttributeChangedSelf.AddLambda([this](FString attributeName, float attributeAmount)
-	{
-		if (attributeName == MaxAttribute)
-			MaxAttributeAmount = attributeAmount;
-		else if (attributeName == Attribute)
-			ProgressBar->SetPercent(attributeAmount/MaxAttributeAmount);
-	});
+	if (bIsPlayer)
+		UUtilities::GetAuraSubSystem(this)->OnAttributeChangedPlayer.AddLambda([this](FString attributeName, float attributeAmount)
+			{
+				if (attributeName == MaxAttribute)
+					MaxAttributeAmount = attributeAmount;
+				else if (attributeName == Attribute)
+					ProgressBar->SetPercent(attributeAmount/MaxAttributeAmount);
+			});
+	else 
+		UUtilities::GetAuraSubSystem(this)->OnAttributeChangedEnemy.AddLambda([this](FString EnemyId,FString attributeName, float attributeAmount)
+			{
+				if (EnemyName == EnemyId)
+				{
+					if (attributeName == MaxAttribute)
+						MaxAttributeAmount = attributeAmount;
+					else if (attributeName == Attribute)
+						ProgressBar->SetPercent(attributeAmount/MaxAttributeAmount);
+				}
+			});
 }

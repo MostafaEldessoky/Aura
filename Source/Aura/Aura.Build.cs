@@ -19,10 +19,13 @@ public class Aura : ModuleRules
 			"UMG",
 			"Slate",
 			"SlateCore",
-			"NetCore"
+			"NetCore",
+			"AIModule",
+			"Niagara",
+			"MotionWarping"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "AIModule" });
+		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
