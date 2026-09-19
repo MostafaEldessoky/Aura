@@ -29,7 +29,6 @@ private:
     void PlayerInitializeStartupAttributes();
     void EnemyBroadcastAttributeChange();
     void EnemyInitializeStartupAttributes();
-	void InitializePlayerAbilities();
-	void InitializeEnemyAbilities();
+	void InitializeAbilities(TArray<TSubclassOf<UGameplayAbility>> Abilities);
 	void PlayerListenToInputEvents();
 };

@@ -10,10 +10,10 @@
 
 class ITargetable;
 class UAuraData;
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnInputPressed,FGameplayTag,FVector,TScriptInterface<ITargetable>)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnInputPressed,FGameplayTag)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPickedUpEffectItem, FGameplayTagContainer)
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedSelf,const FString&,float)
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedEnemy,FGameplayAttribute)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedPlayer,const FString&,float)
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAttributeChangedEnemy,FString,const FString&,float)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnNeedLevelUpAttribute,const FString&)
 /**
  * 
@@ -28,7 +28,7 @@ public:
 	const UAuraData* AuraData;
 	FOnInputPressed OnInputPressed;
     FOnPickedUpEffectItem OnPickedUpEffectItem;
-    FOnAttributeChangedSelf OnAttributeChangedSelf;
+    FOnAttributeChangedPlayer OnAttributeChangedPlayer;
     FOnAttributeChangedEnemy OnAttributeChangedEnemy;
     FOnNeedLevelUpAttribute OnNeedLevelUpAttribute;
 };

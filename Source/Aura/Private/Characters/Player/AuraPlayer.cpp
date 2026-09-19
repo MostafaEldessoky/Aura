@@ -7,6 +7,7 @@
 #include "PlayerState/AuraState.h"
 #include "Statics/Utilities.h"
 
+
 AAuraPlayer::AAuraPlayer()
 {
 	PrimaryActorTick.bCanEverTick = false;

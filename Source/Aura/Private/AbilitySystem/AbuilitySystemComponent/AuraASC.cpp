@@ -7,7 +7,6 @@
 #include "Data/AuraData.h"
 #include "PlayerState/AuraState.h"
 #include "Data/Tags.h"
-#include "Interfaces/Targetable.h"
 #include "Statics/AuraSubSystem.h"
 #include "Statics/Utilities.h"
 
@@ -38,11 +37,11 @@ void UAuraASC::BeginPlay()
 		{
 			SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 			InitAbilityActorInfo(GetOwner(),Cast<APlayerState>(GetOwner())->GetPawn());
-			InitializePlayerAbilities();
+			InitializeAbilities(UUtilities::GetAuraSubSystem(this)->AuraData->PlayerData.Abilities);
 			PlayerBroadcastAttributeChange();
 			PlayerLevelUp();
 			PlayerListenToInputEvents();
-			GetWorld()->GetTimerManager().SetTimer(InitializeStartupAttributesTimerHandle,this,&UAuraASC::PlayerInitializeStartupAttributes,0.1f,false);
+			GetWorld()->GetTimerManager().SetTimer(InitializeStartupAttributesTimerHandle,this,&UAuraASC::PlayerInitializeStartupAttributes,0.5f,false);
 		});
 	else // Enemy Pawn
 		UUtilities::Initialize(this,[this](){return GetOwner() != nullptr;},
@@ -50,23 +49,23 @@ void UAuraASC::BeginPlay()
 		{
 			SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 			InitAbilityActorInfo(GetOwner(),GetOwner());
-			InitializeEnemyAbilities();
+			InitializeAbilities(UUtilities::GetAuraSubSystem(this)->AuraData->EnemyData.Abilities);
 			EnemyBroadcastAttributeChange();
-			GetWorld()->GetTimerManager().SetTimer(InitializeStartupAttributesTimerHandle,this,&UAuraASC::EnemyInitializeStartupAttributes,0.1f,false);
+			GetWorld()->GetTimerManager().SetTimer(InitializeStartupAttributesTimerHandle,this,&UAuraASC::EnemyInitializeStartupAttributes,0.5f,false);
 		});
 }
 void UAuraASC::PlayerBroadcastAttributeChange()
 {
-	if (Cast<APlayerState>(GetOwner())->GetPawn()->IsLocallyControlled())
+	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
 		for (const auto& temp : AuraAttributes->FuncPtrs)
 			GetGameplayAttributeValueChangeDelegate(temp()).AddLambda([this](const FOnAttributeChangeData& Data)
 			{
-				UUtilities::GetAuraSubSystem(this)->OnAttributeChangedSelf.Broadcast(Data.Attribute.GetName(),Data.Attribute.GetNumericValue(AuraAttributes.Get()));
+				UUtilities::GetAuraSubSystem(this)->OnAttributeChangedPlayer.Broadcast(Data.Attribute.GetName(),Data.Attribute.GetNumericValue(AuraAttributes.Get()));
 			});
 }
 void UAuraASC::PlayerLevelUp()
 {
-	if (Cast<APlayerState>(GetOwner())->GetPawn()->IsLocallyControlled())
+	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
 		UUtilities::GetAuraSubSystem(this)->OnNeedLevelUpAttribute.AddLambda([this](const FString& AttributeName)
 		{
 			Server_ApplyLevelUpEffect(AttributeName);
@@ -91,7 +90,7 @@ void UAuraASC::Server_ApplyLevelUpEffect_Implementation(const FString& Attribute
 }
 void UAuraASC::PlayerInitializeStartupAttributes()
 {
-	if (Cast<APlayerState>(GetOwner())->GetPawn()->HasAuthority())
+	if (Cast<APawn>(GetAvatarActor())->HasAuthority())
 		for (const auto& temp : UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.StartupAttributes)
 			ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(temp,UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.EffectLevel,MakeEffectContext()).Data.Get());
 }
@@ -100,8 +99,8 @@ void UAuraASC::EnemyBroadcastAttributeChange()
 	for (const auto& temp : AuraAttributes->FuncPtrs)
 		GetGameplayAttributeValueChangeDelegate(temp()).AddLambda([this](const FOnAttributeChangeData& Data)
 		{
-			if (AuraAttributes->GetHealthAttribute() == Data.Attribute || AuraAttributes->GetManaAttribute() == Data.Attribute)
-				UUtilities::GetAuraSubSystem(this)->OnAttributeChangedEnemy.Broadcast(Data.Attribute);
+			if (AuraAttributes->GetHealthAttribute() == Data.Attribute || AuraAttributes->GetMaxHealthAttribute() == Data.Attribute || AuraAttributes->GetManaAttribute() == Data.Attribute || AuraAttributes->GetMaxManaAttribute() == Data.Attribute)
+				UUtilities::GetAuraSubSystem(this)->OnAttributeChangedEnemy.Broadcast(GetAvatarActor()->GetName(),Data.Attribute.GetName(),Data.Attribute.GetNumericValue(AuraAttributes.Get()));
 		});
 }
 void UAuraASC::EnemyInitializeStartupAttributes()
@@ -110,30 +109,24 @@ void UAuraASC::EnemyInitializeStartupAttributes()
 		for (const auto& temp : UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.StartupAttributes)
 			ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(temp,UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.EffectLevel,MakeEffectContext()).Data.Get());
 }
-void UAuraASC::InitializePlayerAbilities()
+void UAuraASC::InitializeAbilities(TArray<TSubclassOf<UGameplayAbility>> Abilities)
 {
-	for (const auto& temp : UUtilities::GetAuraSubSystem(this)->AuraData->PlayerData.Abilities)
-		GiveAbility(FGameplayAbilitySpec(temp));
-}
-void UAuraASC::InitializeEnemyAbilities()
-{
-	for (const auto& temp : UUtilities::GetAuraSubSystem(this)->AuraData->EnemyData.Abilities)
-		GiveAbility(FGameplayAbilitySpec(temp));
+	if (Cast<APawn>(GetAvatarActor())->HasAuthority()) 
+		for (const auto& temp : Abilities)
+			GiveAbility(FGameplayAbilitySpec(temp));
 }
 void UAuraASC::PlayerListenToInputEvents()
- {
- 	UUtilities::GetAuraSubSystem(this)->OnInputPressed.AddLambda(
- 		[this](FGameplayTag InputTag,FVector TargetLocation,TScriptInterface<ITargetable> TargetPawn)
- 		{
- 			FGameplayTagContainer GameplayTagContainer;
- 			GameplayTagContainer.AddTag(InputTag);
- 			TArray<FGameplayAbilitySpec*> MatchingGameplayAbilities;
- 			GetActivatableGameplayAbilitySpecsByAllMatchingTags(GameplayTagContainer,MatchingGameplayAbilities);
- 			for (const auto& temp : MatchingGameplayAbilities)
- 				if (!temp->IsActive())
- 				{
- 					TryActivateAbility(temp->Handle);
- 					// way to pass data to the ability
- 				}
- 		});
- }
+{
+	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
+		UUtilities::GetAuraSubSystem(this)->OnInputPressed.AddLambda(
+ 			[this](FGameplayTag InputTag)
+ 			{
+ 				FGameplayTagContainer GameplayTagContainer;
+ 				GameplayTagContainer.AddTag(InputTag);
+ 				TArray<FGameplayAbilitySpec*> MatchingGameplayAbilities;
+ 				GetActivatableGameplayAbilitySpecsByAllMatchingTags(GameplayTagContainer,MatchingGameplayAbilities);
+ 				for (const auto& temp : MatchingGameplayAbilities)
+ 					if (!temp->IsActive())
+ 						TryActivateAbility(temp->Handle);
+ 			});
+}

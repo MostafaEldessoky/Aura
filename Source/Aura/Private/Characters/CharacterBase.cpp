@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Statics/AuraSubSystem.h"
 #include "Statics/Utilities.h"
+#include "MotionWarpingComponent.h"
 
 
 ACharacterBase::ACharacterBase()
@@ -20,6 +21,7 @@ ACharacterBase::ACharacterBase()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>("MotionWarpingComponent");
 }
 void ACharacterBase::BeginPlay()
 {
@@ -38,5 +40,17 @@ UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 UAuraAttributes* ACharacterBase::GetAuraAttributes() const
 {
 	return nullptr;
+}
+
+FTransform ACharacterBase::GetWeaponSocketTransform()
+{
+	return WeaponMesh->GetSocketTransform(UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.WeaponSocketName);
+}
+
+void ACharacterBase::TargetMotionWarping(FVector TargetLocation)
+{
+	MotionWarpingComponent->AddOrUpdateWarpTargetFromLocation(
+		UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.MotionWarpingTargetName,
+		TargetLocation);
 }
 

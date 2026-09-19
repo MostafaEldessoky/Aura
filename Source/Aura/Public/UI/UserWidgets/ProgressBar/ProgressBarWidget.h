@@ -14,9 +14,13 @@ UCLASS()
 class AURA_API UProgressBarWidget : public UUserWidget
 {
 	GENERATED_BODY()
+public:
+	FString EnemyName;
 protected:
 	virtual void NativeOnInitialized() override;
 private:
+	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
+	bool bIsPlayer{true};
 	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
 	FString Attribute;
 	FString MaxAttribute;

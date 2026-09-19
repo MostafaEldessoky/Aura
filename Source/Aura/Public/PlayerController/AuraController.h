@@ -22,8 +22,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 private:
-	void TraceWithMouse();
+	void TraceUnderMouse();
 	TScriptInterface<ITargetable> CurrentTarget{nullptr};
 	TScriptInterface<ITargetable> LastTarget{nullptr};
-	FVector MousePositionInWorld;
 };
