@@ -22,4 +22,5 @@ protected:
 	virtual void Activate() override;
 private:
 	void TraceUnderMouse();
+	bool bIsServer;
 };

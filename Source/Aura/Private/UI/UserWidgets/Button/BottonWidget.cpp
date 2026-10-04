@@ -4,7 +4,7 @@
 #include "UI/UserWidgets/Button/BottonWidget.h"
 
 #include "Components/Button.h"
-#include "Statics/Utilities.h"
+#include "Statics/AuraSubSystem.h"
 
 void UBottonWidget::NativeOnInitialized()
 {
@@ -14,5 +14,5 @@ void UBottonWidget::NativeOnInitialized()
 
 void UBottonWidget::LevelUp()
 {
-	UUtilities::GetAuraSubSystem(this)->OnNeedLevelUpAttribute.Broadcast(Attribute);
+	UAuraSubSystem::GetAuraSubSystem(this)->OnNeedLevelUpAttribute.Broadcast(Attribute);
 }

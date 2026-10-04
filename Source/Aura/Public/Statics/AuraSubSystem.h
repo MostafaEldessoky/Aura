@@ -11,6 +11,7 @@
 class ITargetable;
 class UAuraData;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInputPressed,FGameplayTag)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnInputReleased,FGameplayTag)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPickedUpEffectItem, FGameplayTagContainer)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedPlayer,const FString&,float)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAttributeChangedEnemy,FString,const FString&,float)
@@ -23,10 +24,11 @@ class AURA_API UAuraSubSystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 public:
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	static UAuraSubSystem* GetAuraSubSystem(const UObject* WorldContextObject);
 	UPROPERTY()
-	const UAuraData* AuraData;
+	UAuraData* AuraData{nullptr};
 	FOnInputPressed OnInputPressed;
+	FOnInputReleased OnInputReleased;
     FOnPickedUpEffectItem OnPickedUpEffectItem;
     FOnAttributeChangedPlayer OnAttributeChangedPlayer;
     FOnAttributeChangedEnemy OnAttributeChangedEnemy;

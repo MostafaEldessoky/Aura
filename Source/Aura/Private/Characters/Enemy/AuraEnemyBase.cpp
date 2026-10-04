@@ -5,10 +5,12 @@
 
 #include "AbilitySystem/AbilitySystemComponent/AuraASC.h"
 #include "AbilitySystem/Attribute/AuraAttributes.h"
+#include "AI/AIController/AuraAIController.h"
 #include "Components/WidgetComponent.h"
 #include "Data/AuraData.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Statics/AuraSubSystem.h"
-#include "Statics/Utilities.h"
+#include "Statics/AuraFunctionLibrary.h"
 #include "UI/UserWidgets/ProgressBar/ProgressBarWidget.h"
 
 
@@ -18,6 +20,12 @@ AAuraEnemyBase::AAuraEnemyBase()
 	AuraAttributes = CreateDefaultSubobject<UAuraAttributes>(TEXT("AuraAttributes"));
 	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetComponent"));
 	WidgetComponent->SetupAttachment(GetRootComponent());
+	AIControllerClass = AAuraAIController::StaticClass();
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
 void AAuraEnemyBase::BeginPlay()
@@ -34,15 +42,4 @@ UAuraAttributes* AAuraEnemyBase::GetAuraAttributes() const
 {
 	return AuraAttributes.Get();
 }
-void AAuraEnemyBase::Highlight()
-{
-	GetMesh()->SetRenderCustomDepth(true);
-	WeaponMesh->SetRenderCustomDepth(true);
-	GetMesh()->SetCustomDepthStencilValue(UUtilities::GetAuraSubSystem(this)->AuraData->EnemyData.HighlightValueColor);
-	WeaponMesh->SetCustomDepthStencilValue(UUtilities::GetAuraSubSystem(this)->AuraData->EnemyData.HighlightValueColor);
-}
-void AAuraEnemyBase::UnHighlight()
-{
-	GetMesh()->SetRenderCustomDepth(false);
-	WeaponMesh->SetRenderCustomDepth(false);
-}
+

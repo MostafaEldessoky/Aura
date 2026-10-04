@@ -3,44 +3,72 @@
 
 #include "NativeGameplayTags.h"
 
-namespace Tags
+namespace Aura
 {
 	namespace Characters
 	{
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player)
-	}
-	namespace EventTasks
-	{
-		UE_DECLARE_GAMEPLAY_TAG_EXTERN(SpawnProjectile)
-	}
-
-	namespace Projectiles
-	{
-		UE_DECLARE_GAMEPLAY_TAG_EXTERN(FireBall)
-	}
-	namespace UIMassage
-	{
-		UE_DECLARE_GAMEPLAY_TAG_EXTERN(UIMassage)
-		namespace EffectType
-		{
-			UE_DECLARE_GAMEPLAY_TAG_EXTERN(Heal)
-			UE_DECLARE_GAMEPLAY_TAG_EXTERN(ManaUp)
-		}
-	}
-	namespace Inputs
-	{
-		namespace MappingContexts
-		{
-			UE_DECLARE_GAMEPLAY_TAG_EXTERN(Default)
-		}
-
-		namespace InputActions
-		{
-			UE_DECLARE_GAMEPLAY_TAG_EXTERN(AttackMove)
-		}
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(GoblinSpear)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(GoblinSlingShot)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(GoblinShaman)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ghoul)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(DemonMelee)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(DemonRanged)
 	}
 	namespace Montages
 	{
-		UE_DECLARE_GAMEPLAY_TAG_EXTERN(AttackMontage)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryAttack)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitReact)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Death)
+	}
+	namespace Projectiles
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(FireBall)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Stone)
+	}
+	namespace Effects
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryAttributes)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(SecondaryAttributes)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(VitalAttributes)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Damage)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(HealUp)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(ManaUp)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(StopMove)
+	}
+	namespace Abilities
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(HighLight)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryAttack)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(MoveTo)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(StopMove)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(MeleeAttack)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(ThrowDirectionalProjectile)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(ThrowFollowUpProjectile)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Summoning)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitReact)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Death)
+	}
+	namespace Tasks
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(WeaponAction)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(OnProjectileHitTarget)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(AISenseTarget)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(AIForgotTarget)
+	}
+	namespace UI
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(PickUp)
+	}
+	namespace InputMappingContexts
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Default)
+	}
+	namespace InputActions
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(RMB)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Arcane)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(FireBlast)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Electrocute)
 	}
 }

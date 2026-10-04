@@ -27,6 +27,11 @@ public:
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
 	
 	TArray<FGameplayAttribute(*)()> FuncPtrs;
+	
+	UPROPERTY()
+	FGameplayAttributeData InComingPhysicalDamage;
+	UPROPERTY()
+	FGameplayAttributeData InComingMagicalDamage;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth;
@@ -42,37 +47,33 @@ public:
 	FGameplayAttributeData Resilience;
 	UPROPERTY(ReplicatedUsing = OnRep_Intelligence)
 	FGameplayAttributeData Intelligence;
-	UPROPERTY(ReplicatedUsing = OnRep_PhysicalDamage)
-	FGameplayAttributeData PhysicalDamage;
-	UPROPERTY(ReplicatedUsing = OnRep_MagicalDamage)
-	FGameplayAttributeData MagicalDamage;
 	UPROPERTY(ReplicatedUsing = OnRep_AttackRange)
 	FGameplayAttributeData AttackRange;
 	UPROPERTY(ReplicatedUsing = OnRep_AttackSpeed)
 	FGameplayAttributeData AttackSpeed;
-	UPROPERTY(ReplicatedUsing = OnRep_CriticalChance)
-	FGameplayAttributeData CriticalChance;
 	UPROPERTY(ReplicatedUsing = OnRep_CriticalDamage)
 	FGameplayAttributeData CriticalDamage;
-	UPROPERTY(ReplicatedUsing = OnRep_PhysicalArmor)
-	FGameplayAttributeData PhysicalArmor;
-	UPROPERTY(ReplicatedUsing = OnRep_MagicalArmor)
-	FGameplayAttributeData MagicalArmor;
 	UPROPERTY(ReplicatedUsing = OnRep_MovementSpeed)
 	FGameplayAttributeData MovementSpeed;
 	UPROPERTY(ReplicatedUsing = OnRep_CooldownReduction)
 	FGameplayAttributeData CooldownReduction;
 	UPROPERTY(ReplicatedUsing = OnRep_LifeSteal)
 	FGameplayAttributeData LifeSteal;
-	UPROPERTY(ReplicatedUsing = OnRep_PhysicalPenetration)
-	FGameplayAttributeData PhysicalPenetration;
-	UPROPERTY(ReplicatedUsing = OnRep_MagicalPenetration)
-	FGameplayAttributeData MagicalPenetration;
 	UPROPERTY(ReplicatedUsing = OnRep_HealthRegen)
 	FGameplayAttributeData HealthRegen;
 	UPROPERTY(ReplicatedUsing = OnRep_ManaRegen)
 	FGameplayAttributeData ManaRegen;
-
+	UPROPERTY(ReplicatedUsing = OnRep_PhysicalPenetration)
+	FGameplayAttributeData PhysicalPenetration;
+	UPROPERTY(ReplicatedUsing = OnRep_MagicalPenetration)
+	FGameplayAttributeData MagicalPenetration;
+	UPROPERTY(ReplicatedUsing = OnRep_PhysicalArmor)
+	FGameplayAttributeData PhysicalArmor;
+	UPROPERTY(ReplicatedUsing = OnRep_MagicalArmor)
+	FGameplayAttributeData MagicalArmor;
+	UPROPERTY(ReplicatedUsing = OnRep_DamageBlock)
+	FGameplayAttributeData DamageBlock;
+	
 	UFUNCTION()
 	void OnRep_MaxHealth(const FGameplayAttributeData& OldValue) const;
 	UFUNCTION()
@@ -88,15 +89,9 @@ public:
 	UFUNCTION()
 	void OnRep_Intelligence(const FGameplayAttributeData& OldValue) const;
 	UFUNCTION()
-	void OnRep_PhysicalDamage(const FGameplayAttributeData& OldValue) const;
-	UFUNCTION()
-	void OnRep_MagicalDamage(const FGameplayAttributeData& OldValue) const;
-	UFUNCTION()
 	void OnRep_AttackRange(const FGameplayAttributeData& OldValue) const;
 	UFUNCTION()
 	void OnRep_AttackSpeed(const FGameplayAttributeData& OldValue) const;
-	UFUNCTION()
-	void OnRep_CriticalChance(const FGameplayAttributeData& OldValue) const;
 	UFUNCTION()
 	void OnRep_CriticalDamage(const FGameplayAttributeData& OldValue) const;
 	UFUNCTION()
@@ -117,7 +112,12 @@ public:
 	void OnRep_HealthRegen(const FGameplayAttributeData& OldValue) const;
 	UFUNCTION()
 	void OnRep_ManaRegen(const FGameplayAttributeData& OldValue) const;
+	UFUNCTION()
+	void OnRep_DamageBlock(const FGameplayAttributeData& OldValue) const;
 
+	ATTRIBUTE_ACCESSORS(UAuraAttributes, InComingPhysicalDamage);
+	ATTRIBUTE_ACCESSORS(UAuraAttributes, InComingMagicalDamage);
+	
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, MaxHealth);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, Health);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, MaxMana);
@@ -125,11 +125,8 @@ public:
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, Strength);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, Resilience);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, Intelligence);
-	ATTRIBUTE_ACCESSORS(UAuraAttributes, PhysicalDamage);
-	ATTRIBUTE_ACCESSORS(UAuraAttributes, MagicalDamage);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, AttackRange);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, AttackSpeed);
-	ATTRIBUTE_ACCESSORS(UAuraAttributes, CriticalChance);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, CriticalDamage);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, PhysicalArmor);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, MagicalArmor);
@@ -140,10 +137,11 @@ public:
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, MagicalPenetration);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, HealthRegen);
 	ATTRIBUTE_ACCESSORS(UAuraAttributes, ManaRegen);
+	ATTRIBUTE_ACCESSORS(UAuraAttributes, DamageBlock);
 
 private:
 	void ClampAttributes(const struct FGameplayEffectModCallbackData& Data);
-	void PackageData(const struct FGameplayEffectModCallbackData& Data);
+	void ComplexDamageCalc(const struct FGameplayEffectModCallbackData& Data);
 };
 
 

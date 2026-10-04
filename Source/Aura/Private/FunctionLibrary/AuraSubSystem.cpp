@@ -5,10 +5,11 @@
 #include "Data/AuraData.h"
 
 
-void UAuraSubSystem::Initialize(FSubsystemCollectionBase& Collection)
+UAuraSubSystem* UAuraSubSystem::GetAuraSubSystem(const UObject* WorldContextObject)
 {
-	Super::Initialize(Collection);
-	AuraData = Cast<UAuraData>(StaticLoadObject(UAuraData::StaticClass(), nullptr,
-		TEXT("/Game/BluePrints/Data/BP_SharedData.BP_SharedData")));
+	auto GameInstanceObj = WorldContextObject->GetWorld()->GetGameInstance()->GetSubsystem<UAuraSubSystem>();
+	if (!GameInstanceObj->AuraData)
+		GameInstanceObj->AuraData = Cast<UAuraData>(StaticLoadObject(UAuraData::StaticClass(), nullptr,
+			TEXT("/Game/BluePrints/Data/BP_SharedData.BP_SharedData")));
+	return GameInstanceObj;
 }
-

@@ -6,9 +6,10 @@
 #include "GameFramework/PlayerController.h"
 #include "AuraController.generated.h"
 
+class ICombat;
 class UAuraData;
-class UUtilities;
-class ITargetable;
+class UAuraFunctionLibrary;
+
 /**
  * 
  */
@@ -21,8 +22,4 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
-private:
-	void TraceUnderMouse();
-	TScriptInterface<ITargetable> CurrentTarget{nullptr};
-	TScriptInterface<ITargetable> LastTarget{nullptr};
 };

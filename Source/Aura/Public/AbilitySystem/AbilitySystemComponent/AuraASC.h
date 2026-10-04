@@ -7,6 +7,7 @@
 #include "AuraASC.generated.h"
 
 
+class ICombat;
 class UAuraAttributes;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -22,13 +23,15 @@ private:
 	void Client_BroadCastPickUpItem(const FGameplayEffectSpec& SpecApplied);
 	UFUNCTION(Server, Reliable)
 	void Server_ApplyLevelUpEffect(const FString& AttributeName);
-	TWeakObjectPtr<UAuraAttributes> AuraAttributes;
-	FTimerHandle InitializeStartupAttributesTimerHandle;
+	void InitializeAbilities(TArray<FGameplayTag> AbilitiesTags);
 	void PlayerBroadcastAttributeChange();
     void PlayerLevelUp();
     void PlayerInitializeStartupAttributes();
     void EnemyBroadcastAttributeChange();
     void EnemyInitializeStartupAttributes();
-	void InitializeAbilities(TArray<TSubclassOf<UGameplayAbility>> Abilities);
-	void PlayerListenToInputEvents();
+	void OnDeath();
+	void PlayerInputs();
+	TWeakObjectPtr<UAuraAttributes> AuraAttributes;
+	FTimerHandle InitializeStartupAttributesTimerHandle;
+	TScriptInterface<ICombat> CombatCharacter;
 };

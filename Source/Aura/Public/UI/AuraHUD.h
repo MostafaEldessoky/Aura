@@ -16,11 +16,8 @@ class AURA_API AAuraHUD : public AHUD
 	GENERATED_BODY()
 	
 protected:
-	
 	virtual void BeginPlay() override;
-	
 private:
-	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> BaseUserWidgetClass;
 	TWeakObjectPtr<UUserWidget> BaseUserWidget{nullptr};

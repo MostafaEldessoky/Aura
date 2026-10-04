@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Characters/CharacterBase.h"
-#include "Interfaces/Targetable.h"
 #include "AuraEnemyBase.generated.h"
 
 class UWidgetComponent;
@@ -12,7 +11,7 @@ class UAuraAttributes;
 class UAuraASC;
 
 UCLASS()
-class AURA_API AAuraEnemyBase : public ACharacterBase , public ITargetable
+class AURA_API AAuraEnemyBase : public ACharacterBase
 {
 	GENERATED_BODY()
 
@@ -21,8 +20,6 @@ public:
 	virtual void BeginPlay() override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual UAuraAttributes* GetAuraAttributes() const override;
-	virtual void Highlight() override;
-	virtual void UnHighlight() override;
 private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAuraASC> AuraASC;
@@ -30,5 +27,4 @@ private:
 	TObjectPtr<UAuraAttributes> AuraAttributes;
 	UPROPERTY(VisibleAnywhere)
 	UWidgetComponent* WidgetComponent;
-	
 };

@@ -3,10 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayEffectTypes.h"
+#include "GameplayEffect.h"
 #include "GameFramework/Actor.h"
 #include "Projectile.generated.h"
 
+
+class URotatingMovementComponent;
+class UAbilitySystemComponent;
 class UProjectileMovementComponent;
 class USphereComponent;
 
@@ -17,15 +20,22 @@ class AURA_API AProjectile : public AActor
 
 public:
 	AProjectile();
-	FGameplayEffectSpecHandle ProjectileEffectSpecHandle;
-protected:
-	virtual void BeginPlay() override;
-private:
+	int32 AbilityLevel;
+	float LifeTime{5.f};
 	UPROPERTY(VisibleAnywhere)
 	USphereComponent* SphereComp;
 	UPROPERTY(VisibleAnywhere)
 	UProjectileMovementComponent* ProjectileMovementComponent; 
+	UPROPERTY(VisibleAnywhere)
+	URotatingMovementComponent* RotatingMovementComponent;
+protected:
+	virtual void BeginPlay() override;
+private:
+	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
+	FGameplayTag CueTag;
+	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
+	FGameplayTag DamageEffectTag;
 	UFUNCTION()
-	void OnSphereHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-	TWeakObjectPtr<UAbilitySystemComponent> OwnedASC;
+	void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 };

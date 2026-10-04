@@ -20,7 +20,7 @@ protected:
 	virtual void NativeOnInitialized() override;
 private:
 	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
-	FGameplayTag GameplayTags;
+	FGameplayTag MassageTag;
 	UPROPERTY(meta=(BindWidget))
 	UImage* MassageImage;
 	UPROPERTY(meta=(BindWidget))

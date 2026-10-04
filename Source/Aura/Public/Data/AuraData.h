@@ -7,6 +7,8 @@
 #include "GameplayTags.h"
 #include "AuraData.generated.h"
 
+class UBehaviorTree;
+class AAuraEnemyBase;
 class UNiagaraSystem;
 class AProjectile;
 class UGameplayAbility;
@@ -14,11 +16,31 @@ class UGameplayEffect;
 class UInputAction;
 class UInputMappingContext;
 
-USTRUCT(Blueprintable) struct FCharacterBaseData
+USTRUCT(Blueprintable) struct FCharacterData
 {
 	GENERATED_BODY()
 	UPROPERTY(EditDefaultsOnly)
+	TArray<FGameplayTag> StartupAttributes;
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FGameplayTag> StartUpAbilities;
+	UPROPERTY(EditDefaultsOnly)
 	FName WeaponMeshSocketName;
+	UPROPERTY(EditDefaultsOnly)
+	FName WeaponMechanicSocketName;
+	UPROPERTY(EditDefaultsOnly)
+	FName MotionWarpingTargetName;
+	UPROPERTY(EditDefaultsOnly)
+	int32 HighlightValueColor;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<APawn> CharacterClass;
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FGameplayTag,UAnimMontage*> Montages;
+};
+USTRUCT(Blueprintable) struct FCollisionsData
+{
+	GENERATED_BODY()
+	UPROPERTY(EditDefaultsOnly)
+	TEnumAsByte<ECollisionChannel> MouseTraceChannel;
 	UPROPERTY(EditDefaultsOnly)
 	FName CapsuleCollisionProfileName;
 	UPROPERTY(EditDefaultsOnly)
@@ -26,65 +48,29 @@ USTRUCT(Blueprintable) struct FCharacterBaseData
 	UPROPERTY(EditDefaultsOnly)
 	FName WeaponCollisionProfileName;
 	UPROPERTY(EditDefaultsOnly)
-	TArray<TSubclassOf<UGameplayEffect>> StartupAttributes;
+	FName ItemCollisionProfileName;
 	UPROPERTY(EditDefaultsOnly)
-	float EffectLevel;
-	UPROPERTY(EditDefaultsOnly)
-	FName WeaponSocketName;
-	UPROPERTY(EditDefaultsOnly)
-	FName MotionWarpingTargetName;
+	FName ProjectileProfileName;
 };
-USTRUCT(Blueprintable) struct FAuraPlayerData
+USTRUCT(Blueprintable) struct FItemsData
 {
 	GENERATED_BODY()
 	UPROPERTY(EditDefaultsOnly)
-	TEnumAsByte<ECollisionChannel> TraceChannel;
+	FGameplayTag ItemEffect;
 	UPROPERTY(EditDefaultsOnly)
-	TArray<TSubclassOf<UGameplayAbility>> Abilities;
+	float ItemLevel;
 };
-USTRUCT(Blueprintable) struct FAuraEnemyData
-{
-	GENERATED_BODY()
-	UPROPERTY(EditDefaultsOnly)
-	int32 HighlightValueColor;
-	UPROPERTY(EditDefaultsOnly)
-	TArray<TSubclassOf<UGameplayAbility>> Abilities;
-};
-USTRUCT(Blueprintable) struct FItemEffectData
-{
-	GENERATED_BODY()
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UGameplayEffect> GamePlayEffectClass;
-	UPROPERTY(EditDefaultsOnly)
-	float EffectLevel;
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag ItemTag;
-};
-USTRUCT(Blueprintable) struct FItemData
-{
-	GENERATED_BODY()
-	UPROPERTY(EditDefaultsOnly)
-	FName BoxCollisionProfileName;
-	UPROPERTY(EditDefaultsOnly)
-	TArray<FItemEffectData> ItemsEffect;
-};
-USTRUCT(Blueprintable) struct FInputData
+USTRUCT(Blueprintable) struct FInputsData
 {
 	GENERATED_BODY()
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FGameplayTag,UInputMappingContext*> InputMappingContext;
 	UPROPERTY(EditDefaultsOnly)
-	TMap<FGameplayTag,UInputAction*> InputActions;
-};
-USTRUCT(Blueprintable) struct FLevelUpData
-{
-	GENERATED_BODY()
+	TMap<FGameplayTag,UInputAction*> InputActionsStarted;
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UGameplayEffect> EffectClass;
-	UPROPERTY(EditDefaultsOnly)
-	int8 EffectLevel;
+	TMap<FGameplayTag,UInputAction*> InputActionsCompleted;
 };
-USTRUCT(Blueprintable) struct FUIMassageData
+USTRUCT(Blueprintable) struct FUIData
 {
 	GENERATED_BODY()
 	UPROPERTY(EditDefaultsOnly)
@@ -94,55 +80,25 @@ USTRUCT(Blueprintable) struct FUIMassageData
 	UPROPERTY(EditDefaultsOnly)
 	UTexture2D* MassageImage;
 };
-USTRUCT(Blueprintable) struct FMontageData
-{
-	GENERATED_BODY()
-	UPROPERTY(EditDefaultsOnly)
-	TMap<FGameplayTag,UAnimMontage*> MontageToPlay;
-};
-
-USTRUCT()
-struct FProjectileAssets
-{
-	GENERATED_BODY()
-	UPROPERTY(EditDefaultsOnly)
-    TSubclassOf<AProjectile> ProjectileClass;
-    UPROPERTY(EditDefaultsOnly)
-    USoundBase* HitSoundEffect;
-    UPROPERTY(EditDefaultsOnly)
-    UNiagaraSystem* HitFXEffect;
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UGameplayEffect> ProjectileEffect;
-};
-USTRUCT(Blueprintable) struct FProjectileData
-{
-	GENERATED_BODY()
-	UPROPERTY(EditDefaultsOnly)
-	FName ProjectileProfileName;
-	UPROPERTY(EditDefaultsOnly)
-	TMap<FGameplayTag,FProjectileAssets> ProjectileAssets;
-};
 UCLASS(Blueprintable)
 class AURA_API UAuraData : public UDataAsset
 {
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditDefaultsOnly)
-	FCharacterBaseData CharacterBaseData;
+	FCollisionsData CollisionsData;
 	UPROPERTY(EditDefaultsOnly)
-	FAuraPlayerData PlayerData;
+	FInputsData InputData;
 	UPROPERTY(EditDefaultsOnly)
-	FAuraEnemyData EnemyData;
+	TArray<FItemsData> ItemsData;
 	UPROPERTY(EditDefaultsOnly)
-	FItemData ItemData;
+	TArray<FUIData> UIData;
 	UPROPERTY(EditDefaultsOnly)
-	FInputData InputData;
+	TMap<FGameplayTag,FCharacterData> DataPerCharacter;
 	UPROPERTY(EditDefaultsOnly)
-	TMap<FString,FLevelUpData> LevelUpData;
+	TMap<FGameplayTag,TSubclassOf<UGameplayAbility>> AbilitiesClasses;
 	UPROPERTY(EditDefaultsOnly)
-	TArray<FUIMassageData> MassageData;
+	TMap<FGameplayTag,TSubclassOf<UGameplayEffect>> EffectsClasses;
 	UPROPERTY(EditDefaultsOnly)
-	TMap<FGameplayTag,FMontageData> Montages;
-	UPROPERTY(EditDefaultsOnly)
-	FProjectileData ProjectileData;
+	TMap<FGameplayTag,TSubclassOf<AProjectile>> ProjectilesClasses;
 };

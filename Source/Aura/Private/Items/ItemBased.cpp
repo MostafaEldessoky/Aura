@@ -7,7 +7,6 @@
 #include "Components/BoxComponent.h"
 #include "Data/AuraData.h"
 #include "Statics/AuraSubSystem.h"
-#include "Statics/Utilities.h"
 
 
 AItemBased::AItemBased()
@@ -20,12 +19,12 @@ AItemBased::AItemBased()
 void AItemBased::BeginPlay()
 {
 	Super::BeginPlay();
-	BoxComponent->SetCollisionProfileName(UUtilities::GetAuraSubSystem(this)->AuraData->ItemData.BoxCollisionProfileName);
-	for (const auto& temp : UUtilities::GetAuraSubSystem(this)->AuraData->ItemData.ItemsEffect)
-		if (temp.ItemTag.MatchesTagExact(ItemTag))
+	BoxComponent->SetCollisionProfileName(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->CollisionsData.ItemCollisionProfileName);
+	for (const auto& temp : UAuraSubSystem::GetAuraSubSystem(this)->AuraData->ItemsData)
+		if (temp.ItemEffect.MatchesTagExact(ItemTag))
 		{
-			GamePlayEffectClass = temp.GamePlayEffectClass;
-			EffectLevel = temp.EffectLevel;
+			EffectClass = UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[temp.ItemEffect];
+			EffectLevel = temp.ItemLevel;
 			break;
 		}
 	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AItemBased::OnBoxOverlap);
@@ -38,10 +37,10 @@ void AItemBased::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 	if (!temp1) return;
 	auto temp2 = temp1->MakeEffectContext();
 	temp2.AddSourceObject(temp1);
-	auto temp3 = temp1->MakeOutgoingSpec(GamePlayEffectClass, EffectLevel, temp2);
+	auto temp3 = temp1->MakeOutgoingSpec(EffectClass, EffectLevel, temp2);
 	auto temp4 = temp1->ApplyGameplayEffectSpecToSelf(*temp3.Data.Get());
 	if (temp3.Data.Get()->Def.Get()->DurationPolicy == EGameplayEffectDurationType::Infinite)
-		ActiveGameplayEffectHandle.Add(temp4);
+		ActiveEffectHandle.Add(temp4);
 	else Destroy();
 }
 void AItemBased::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -49,7 +48,7 @@ void AItemBased::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 {
 	auto temp1 = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 	if (!temp1) return;
-	for (auto& temp2 : ActiveGameplayEffectHandle)
+	for (auto& temp2 : ActiveEffectHandle)
 		if ( temp1 == temp2.GetOwningAbilitySystemComponent())
 			temp2.GetOwningAbilitySystemComponent()->RemoveActiveGameplayEffect(temp2,1);
 }

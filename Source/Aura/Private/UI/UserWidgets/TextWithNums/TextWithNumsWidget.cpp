@@ -5,13 +5,12 @@
 
 #include "Components/TextBlock.h"
 #include "Statics/AuraSubSystem.h"
-#include "Statics/Utilities.h"
 
 void UTextWithNumsWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	AttributeName->SetText(FText::FromString(Attribute));
-	UUtilities::GetAuraSubSystem(this)->OnAttributeChangedPlayer.AddLambda([this](FString attributeName, int8 attributeAmount)
+	UAuraSubSystem::GetAuraSubSystem(this)->OnAttributeChangedPlayer.AddLambda([this](FString attributeName, int8 attributeAmount)
 	{
 		if (attributeName == Attribute)
 			AttributeAmount->SetText(FText::FromString(FString::Printf(TEXT("%i"), attributeAmount)));

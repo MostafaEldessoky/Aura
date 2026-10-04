@@ -6,7 +6,6 @@
 #include "Data/AuraData.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Statics/AuraSubSystem.h"
-#include "Statics/Utilities.h"
 #include "MotionWarpingComponent.h"
 
 
@@ -27,30 +26,67 @@ void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
-	WeaponMesh->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale,UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.WeaponMeshSocketName);
-	WeaponMesh->SetCollisionProfileName(UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.WeaponCollisionProfileName);
-	GetMesh()->SetCollisionProfileName(UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.MeshCollisionProfileName);
-	GetCapsuleComponent()->SetCollisionProfileName(UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.CapsuleCollisionProfileName);
+	WeaponMesh->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale,UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CharacterTagID].WeaponMeshSocketName);
+	WeaponMesh->SetCollisionProfileName(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->CollisionsData.WeaponCollisionProfileName);
+	GetMesh()->SetCollisionProfileName(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->CollisionsData.MeshCollisionProfileName);
+	GetCapsuleComponent()->SetCollisionProfileName(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->CollisionsData.CapsuleCollisionProfileName);
 }
 UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 {
 	return nullptr;
 }
-
 UAuraAttributes* ACharacterBase::GetAuraAttributes() const
 {
 	return nullptr;
 }
-
-FTransform ACharacterBase::GetWeaponSocketTransform()
+void ACharacterBase::Highlight()
 {
-	return WeaponMesh->GetSocketTransform(UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.WeaponSocketName);
+	GetMesh()->SetRenderCustomDepth(true);
+	WeaponMesh->SetRenderCustomDepth(true);
+	GetMesh()->SetCustomDepthStencilValue(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CharacterTagID].HighlightValueColor);
+	WeaponMesh->SetCustomDepthStencilValue(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CharacterTagID].HighlightValueColor);
 }
 
+void ACharacterBase::UnHighlight()
+{
+	GetMesh()->SetRenderCustomDepth(false);
+	WeaponMesh->SetRenderCustomDepth(false);
+}
+UCapsuleComponent* ACharacterBase::GetCapsule()
+{
+	return GetCapsuleComponent();
+}
+
+USkeletalMeshComponent* ACharacterBase::GetModelMesh()
+{
+	return GetMesh();
+}
+
+USkeletalMeshComponent* ACharacterBase::GetWeaponMesh()
+{
+	return WeaponMesh;
+}
+FTransform ACharacterBase::GetWeaponMechanicSocketTransform()
+{
+	return WeaponMesh->GetSocketTransform(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CharacterTagID].WeaponMechanicSocketName);
+}
 void ACharacterBase::TargetMotionWarping(FVector TargetLocation)
 {
 	MotionWarpingComponent->AddOrUpdateWarpTargetFromLocation(
-		UUtilities::GetAuraSubSystem(this)->AuraData->CharacterBaseData.MotionWarpingTargetName,
+		UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CharacterTagID].MotionWarpingTargetName,
 		TargetLocation);
+}
+FGameplayTag ACharacterBase::GetCharacterID()
+{
+	return CharacterTagID;
+}
+FOnDeath& ACharacterBase::GetOnDeathDelegate()
+{
+	return OnDeathDelegate;
+}
+
+UDecalComponent* ACharacterBase::GetDecalComponent()
+{
+	return nullptr;
 }
 

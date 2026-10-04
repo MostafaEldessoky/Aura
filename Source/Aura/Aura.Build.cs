@@ -22,7 +22,11 @@ public class Aura : ModuleRules
 			"NetCore",
 			"AIModule",
 			"Niagara",
-			"MotionWarping"
+			"MotionWarping",
+			"StateTreeModule",
+			"GameplayStateTreeModule",
+			"NavigationSystem",
+			"Niagara",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

@@ -3,9 +3,10 @@
 
 #include "Characters/Player/AuraPlayer.h"
 #include "Camera/CameraComponent.h"
+#include "Components/DecalComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PlayerState/AuraState.h"
-#include "Statics/Utilities.h"
+#include "Statics/AuraFunctionLibrary.h"
 
 
 AAuraPlayer::AAuraPlayer()
@@ -17,11 +18,14 @@ AAuraPlayer::AAuraPlayer()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	CameraComponent->SetupAttachment(SpringArmComponent);
 	CameraComponent->bUsePawnControlRotation = false;
+	DecalComponent = CreateDefaultSubobject<UDecalComponent>("DecalCompInstance");
+	DecalComponent->SetVisibility(false);
+	DecalComponent->Deactivate();
 }
 void AAuraPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	UUtilities::Initialize(this,[this](){return Cast<AAuraState>(GetPlayerState()) != nullptr;},[this]()
+	UAuraFunctionLibrary::TickFuncUntil(this,[this](){return Cast<AAuraState>(GetPlayerState()) != nullptr;},[this]()
 	{
 		AbilitySystemComponent = Cast<AAuraState>(GetPlayerState())->GetAbilitySystemComponent();
 		AuraAttributes = Cast<AAuraState>(GetPlayerState())->GetAuraAttributes();
@@ -35,4 +39,12 @@ UAuraAttributes* AAuraPlayer::GetAuraAttributes() const
 {
 	return AuraAttributes;
 }
+FGenericTeamId AAuraPlayer::GetGenericTeamId() const
+{
+	return FGenericTeamId(1);
+}
 
+UDecalComponent* AAuraPlayer::GetDecalComponent()
+{
+	return DecalComponent;
+}

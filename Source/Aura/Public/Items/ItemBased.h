@@ -32,7 +32,7 @@ private:
 	void OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-	TArray<FActiveGameplayEffectHandle> ActiveGameplayEffectHandle;
-	TSubclassOf<UGameplayEffect> GamePlayEffectClass;
+	TArray<FActiveGameplayEffectHandle> ActiveEffectHandle;
+	TSubclassOf<UGameplayEffect> EffectClass;
 	float EffectLevel;
 };
