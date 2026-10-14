@@ -3,9 +3,11 @@
 
 #include "AbilitySystem/Abilities/Summoning.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "AbilitySystem/Tasks/AbilityTask_TargetDataUnderMouse.h"
+#include "AbilitySystem/Tasks/AbilityTask_SendTargetDataToServer.h"
 #include "Characters/Enemy/AuraEnemyBase.h"
+#include "Data/Tags.h"
 #include "Statics/AuraFunctionLibrary.h"
+
 
 
 void USummoning::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -13,15 +15,20 @@ void USummoning::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const 
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	CommitAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo);
-	auto TargetDataTask = UAbilityTask_TargetDataUnderMouse::GetTargetDataUnderMouse(this);
-	TargetDataTask->OnTargetDataUnderMouse.AddLambda([this](FHitResult HitResult)
+	auto WaitGameplayEventTraceUnderMouse = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,Aura::Abilities::TraceUnderMouse);
+	WaitGameplayEventTraceUnderMouse->EventReceived.AddDynamic(this,&USummoning::TraceUnderMouse);
+	WaitGameplayEventTraceUnderMouse->ReadyForActivation();
+}
+void USummoning::TraceUnderMouse(FGameplayEventData Payload)
+{
+	auto TargetDataTask = UAbilityTask_SendTargetDataToServer::SendTargetDataToServer(this,Payload.TargetData);
+	TargetDataTask->OnTargetDataUnderMouse.AddLambda([this](FGameplayAbilityTargetDataHandle TargetData)
 	{
-		UAuraFunctionLibrary::PlayMontageAndWaitNotify(this,GetAvatarActorFromActorInfo(),HitResult.ImpactPoint,
+		UAuraFunctionLibrary::PlayMontageAndWaitNotify(this,GetAvatarActorFromActorInfo(),TargetData.Get(0)->GetHitResult()->ImpactPoint,
 			PlayedMontageTag,AnimNotifyTag,STATIC_FUNCTION_FNAME(TEXT("USummoning::OnGameplayEventReceivedFromAnimNotify")));
 	});
 	TargetDataTask->ReadyForActivation();
 }
-
 void USummoning::OnGameplayEventReceivedFromAnimNotify(FGameplayEventData Payload)
 {
 	if (GetCurrentActorInfo()->IsNetAuthority())

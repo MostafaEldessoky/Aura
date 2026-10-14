@@ -5,6 +5,10 @@
 
 namespace Aura
 {
+	namespace SetByCaller
+	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Damage)
+	}
 	namespace Characters
 	{
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player)
@@ -38,13 +42,19 @@ namespace Aura
 	}
 	namespace Abilities
 	{
+		namespace Passive
+		{
+			UE_DECLARE_GAMEPLAY_TAG_EXTERN(CriticalChance)
+			UE_DECLARE_GAMEPLAY_TAG_EXTERN(LifeSteal)
+			UE_DECLARE_GAMEPLAY_TAG_EXTERN(PhysicalPenetration)
+			UE_DECLARE_GAMEPLAY_TAG_EXTERN(MagicalPenetration)
+		}
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(HighLight)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(TraceUnderMouse)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(PrimaryAttack)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(MoveTo)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(StopMove)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(MeleeAttack)
-		UE_DECLARE_GAMEPLAY_TAG_EXTERN(ThrowDirectionalProjectile)
-		UE_DECLARE_GAMEPLAY_TAG_EXTERN(ThrowFollowUpProjectile)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Summoning)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitReact)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(Death)

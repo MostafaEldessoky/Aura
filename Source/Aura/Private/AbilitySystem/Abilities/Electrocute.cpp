@@ -5,11 +5,11 @@
 
 #include "AbilitySystemComponent.h"
 #include "GameplayCueFunctionLibrary.h"
-#include "GameplayCueManager.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "AbilitySystem/Tasks/AbilityTask_CanAttack.h"
-#include "AbilitySystem/Tasks/AbilityTask_TargetDataUnderMouse.h"
+#include "AbilitySystem/Tasks/AbilityTask_SendTargetDataToServer.h"
+#include "Data/Tags.h"
 #include "Interfaces/Combat.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Statics/AuraFunctionLibrary.h"
@@ -21,21 +21,30 @@ void UElectrocute::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	auto temp = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
 	temp->OnRelease.AddDynamic(this,&UElectrocute::OnInputReleased);
 	temp->ReadyForActivation();
-	auto TargetDataTask = UAbilityTask_TargetDataUnderMouse::GetTargetDataUnderMouse(this);
-	TargetDataTask->OnTargetDataUnderMouse.AddLambda([this](FHitResult HitResult)
+	auto WaitGameplayEventTraceUnderMouse = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,Aura::Abilities::TraceUnderMouse);
+	WaitGameplayEventTraceUnderMouse->EventReceived.AddDynamic(this,&UElectrocute::TraceUnderMouse);
+	WaitGameplayEventTraceUnderMouse->ReadyForActivation();
+}
+void UElectrocute::TraceUnderMouse(FGameplayEventData Payload)
+{
+	if (bOneTrace) return;
+	bOneTrace = true;
+	auto TargetDataTask = UAbilityTask_SendTargetDataToServer::SendTargetDataToServer(this,Payload.TargetData);
+	TargetDataTask->OnTargetDataUnderMouse.AddLambda([this](FGameplayAbilityTargetDataHandle TargetData)
 	{
-		Target = HitResult;
-		if (!HitResult.GetActor()->Implements<UCombat>())
+		Target = *TargetData.Get(0)->GetHitResult();
+		if (!Target.GetActor()->Implements<UCombat>())
 		{
+			bOneTrace = false;
 			EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,false,false);
 			return;
 		}
-		auto CanAttack = UAbilityTask_CanAttack::GetCanAttack(this,HitResult);
-		CanAttack->OnCanAttack.AddLambda([this,HitResult]()
+		auto CanAttack = UAbilityTask_CanAttack::GetCanAttack(this,Target);
+		CanAttack->OnCanAttack.AddLambda([this]()
 		{
 			if (GetCurrentActorInfo()->IsLocallyControlled())
 				GetCurrentActorInfo()->PlayerController->bShowMouseCursor = false;
-			UAuraFunctionLibrary::PlayMontageAndWaitNotify(this,GetAvatarActorFromActorInfo(),HitResult.GetActor()->GetActorLocation(),
+			UAuraFunctionLibrary::PlayMontageAndWaitNotify(this,GetAvatarActorFromActorInfo(),Target.GetActor()->GetActorLocation(),
 				PlayedMontageTag,AnimNotifyTag,STATIC_FUNCTION_FNAME(TEXT("UElectrocute::OnGameplayEventReceivedFromAnimNotify")));
 		});
 		CanAttack->ReadyForActivation();
@@ -69,7 +78,7 @@ void UElectrocute::OnApplyingElectrocute()
 	if (OutHitResult.GetActor() && OutHitResult.GetActor()->Implements<UCombat>())
 	{
 		TargetActor[0] = OutHitResult.GetActor();
-		UAuraFunctionLibrary::ApplyEffectToTarget(GetAvatarActorFromActorInfo(),TargetActor[0].Get(),OutHitResult.ImpactPoint,DamageEffectTag,GetAbilityLevel());
+		UAuraFunctionLibrary::ApplyEffectToTarget(GetAvatarActorFromActorInfo(),TargetActor[0].Get(),OutHitResult.ImpactPoint,DamageEffectTag,GetAssetTags().First(),GetAbilityLevel());
 		TArray<AActor*> Roots;
 		Roots.Add(GetAvatarActorFromActorInfo());
 		for (int32 i = 0; i < NumberOfTargets - 1; i++)
@@ -80,7 +89,7 @@ void UElectrocute::OnApplyingElectrocute()
 			Roots,
 			ElectrocuteSearchRadius);
 			if (TargetActor[i+1].IsValid())
-				UAuraFunctionLibrary::ApplyEffectToTarget(GetAvatarActorFromActorInfo(),TargetActor[i+1].Get(),OutHitResult.ImpactPoint,DamageEffectTag,GetAbilityLevel());
+				UAuraFunctionLibrary::ApplyEffectToTarget(GetAvatarActorFromActorInfo(),TargetActor[i+1].Get(),OutHitResult.ImpactPoint,DamageEffectTag,GetAssetTags().First(),GetAbilityLevel());
 			else
 				break;
 		}
@@ -91,10 +100,7 @@ void UElectrocute::OnApplyingElectrocute()
 			CueParams.EffectContext = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 			CueParams.EffectContext.AddOrigin(Cast<ICombat>(GetAvatarActorFromActorInfo())->GetWeaponMechanicSocketTransform().GetLocation());
 			CueParams.EffectContext.Get()->AddActors(TargetActor);
-			if (GetCurrentActorInfo()->IsNetAuthority())
-				UGameplayCueFunctionLibrary::AddGameplayCueOnActor(GetAvatarActorFromActorInfo(),CueTag,CueParams);
-			else
-				UGameplayCueManager::AddGameplayCue_NonReplicated(GetAvatarActorFromActorInfo(),CueTag,CueParams);
+			UGameplayCueFunctionLibrary::AddGameplayCueOnActor(GetAvatarActorFromActorInfo(),CueTag,CueParams);
 		}
 	}
 	else
@@ -102,10 +108,8 @@ void UElectrocute::OnApplyingElectrocute()
 		if (GetCurrentActorInfo()->IsLocallyControlled())
 			GetCurrentActorInfo()->PlayerController->bShowMouseCursor = true;
 		bCueActivated = false;
-		if (GetCurrentActorInfo()->IsNetAuthority())
-			UGameplayCueFunctionLibrary::RemoveGameplayCueOnActor(GetAvatarActorFromActorInfo(),CueTag,FGameplayCueParameters());
-		else
-			UGameplayCueManager::RemoveGameplayCue_NonReplicated(GetAvatarActorFromActorInfo(),CueTag,FGameplayCueParameters());
+		bOneTrace = false;
+		UGameplayCueFunctionLibrary::RemoveGameplayCueOnActor(GetAvatarActorFromActorInfo(),CueTag,FGameplayCueParameters());
 		EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,false,false);
 		return;
 	}
@@ -113,12 +117,10 @@ void UElectrocute::OnApplyingElectrocute()
 	{	
 		bInputReleased = false;
 		bCueActivated = false;
+		bOneTrace = false;
 		if (GetCurrentActorInfo()->IsLocallyControlled())
 			GetCurrentActorInfo()->PlayerController->bShowMouseCursor = true;
-		if (GetCurrentActorInfo()->IsNetAuthority())
-			UGameplayCueFunctionLibrary::RemoveGameplayCueOnActor(GetAvatarActorFromActorInfo(),CueTag,FGameplayCueParameters());
-		else
-			UGameplayCueManager::RemoveGameplayCue_NonReplicated(GetAvatarActorFromActorInfo(),CueTag,FGameplayCueParameters());
+		UGameplayCueFunctionLibrary::RemoveGameplayCueOnActor(GetAvatarActorFromActorInfo(),CueTag,FGameplayCueParameters());
 		CommitAbilityCooldown(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true);
 		EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,false,false);
 		return;

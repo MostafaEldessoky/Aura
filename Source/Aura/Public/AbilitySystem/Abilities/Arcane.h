@@ -20,6 +20,9 @@ private:
 	UPROPERTY()
 	UDecalComponent* decal;
 	FHitResult Target;
+	bool bIsInputReleased{false};
+	UFUNCTION()
+	void TraceUnderMouse(FGameplayEventData Payload);
 	UFUNCTION()
 	void OnGameplayEventReceivedFromAnimNotify(FGameplayEventData Payload);
 	UFUNCTION()

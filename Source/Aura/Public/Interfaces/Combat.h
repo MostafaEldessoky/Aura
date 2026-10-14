@@ -9,7 +9,7 @@
 
 class UCapsuleComponent;
 class USphereComponent;
-DECLARE_MULTICAST_DELEGATE(FOnDeath)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDeath,AActor*)
 
 // This class does not need to be modified.
 UINTERFACE()

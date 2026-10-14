@@ -21,6 +21,7 @@ class AURA_API AProjectile : public AActor
 public:
 	AProjectile();
 	int32 AbilityLevel;
+	FGameplayTag AssetTag;
 	float LifeTime{5.f};
 	UPROPERTY(VisibleAnywhere)
 	USphereComponent* SphereComp;

@@ -19,7 +19,8 @@ protected:
 private:
 	UFUNCTION()
 	void OnRMBPressed(FGameplayEventData Payload);
-	void TraceUnderMouse();
+	UFUNCTION()
+	void TraceUnderMouse(FGameplayEventData Payload);
 	TScriptInterface<ICombat> CurrentTarget{nullptr};
 	TScriptInterface<ICombat> LastTarget{nullptr};
 };

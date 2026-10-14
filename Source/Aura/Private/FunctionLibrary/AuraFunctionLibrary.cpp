@@ -12,7 +12,9 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Components/SphereComponent.h"
 #include "Data/AuraData.h"
+#include "Data/Tags.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "GameFramework/RotatingMovementComponent.h"
 #include "Interfaces/Combat.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -54,7 +56,7 @@ TArray<FOverlapResult> UAuraFunctionLibrary::DoOverlapMultiByChannel(AActor* Ins
 		Params);
 	return OutOverlaps;
 }
-void UAuraFunctionLibrary::ApplyEffectToTarget(AActor* Instigator, AActor* Target,const FVector& ImpactPoint, const FGameplayTag& DamageEffectTag,
+void UAuraFunctionLibrary::ApplyEffectToTarget(AActor* Instigator, AActor* Target,const FVector& ImpactPoint, const FGameplayTag& EffectTag,const FGameplayTag& AbilityTag,
 	const float AbilityLevel)
 {
 	auto temp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Instigator);
@@ -63,32 +65,42 @@ void UAuraFunctionLibrary::ApplyEffectToTarget(AActor* Instigator, AActor* Targe
 	auto EffectContext = temp->MakeEffectContext();
 	EffectContext.AddActors(TArray{TWeakObjectPtr(Target)});
 	EffectContext.AddOrigin(ImpactPoint);
-	auto EffectSpec = *temp->MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(Instigator)->AuraData->EffectsClasses[DamageEffectTag],
-		AbilityLevel,EffectContext).Data.Get();
-	temp->ApplyGameplayEffectSpecToTarget(EffectSpec,temp1);
+	
+	TArray<FGameplayAbilitySpec*> AbilitySpecs;
+	temp->GetActivatableGameplayAbilitySpecsByAllMatchingTags(AbilityTag.GetSingleTagContainer(),AbilitySpecs);
+	
+	EffectContext.SetAbility(AbilitySpecs[0]->Ability);
+	
+	auto EffectSpecHandle = temp->MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(Instigator)->AuraData->EffectsClasses[EffectTag],
+		AbilityLevel,EffectContext);
+	
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(EffectSpecHandle,Aura::SetByCaller::Damage,
+		UAuraSubSystem::GetAuraSubSystem(Instigator)->AuraData->AbilitiesClasses[AbilityTag].Damage.GetValueAtLevel(AbilityLevel));
+	
+	temp->ApplyGameplayEffectSpecToTarget(*EffectSpecHandle.Data,temp1);
 }
 void UAuraFunctionLibrary::ApplyEffectToTargetWithCue_NonReplicated(AActor* Instigator,AActor* Target,const FVector& ImpactPoint,
-                                                      const FGameplayTag& CueTag,const FGameplayTag& DamageEffectTag,const float AbilityLevel)
+                                                      const FGameplayTag& CueTag,const FGameplayTag& DamageEffectTag,const FGameplayTag& AbilityTag,const float AbilityLevel)
 {
 	FGameplayCueParameters CueParams;
 	CueParams.Location = ImpactPoint;
 	UGameplayCueManager::ExecuteGameplayCue_NonReplicated(Target,CueTag, CueParams);
-	ApplyEffectToTarget(Instigator,Target,ImpactPoint,DamageEffectTag,AbilityLevel);
+	ApplyEffectToTarget(Instigator,Target,ImpactPoint,DamageEffectTag,AbilityTag,AbilityLevel);
 }
 void UAuraFunctionLibrary::ApplyRadialDamageEffect(AActor* Instigator,const TArray<AActor*>& IgnoredActors,const FVector& OriginPoint,
-	const float RadiusOfEffect,const FGameplayTag& DamageEffectTag,const float AbilityLevel)
+	const float RadiusOfEffect,const FGameplayTag& DamageEffectTag,const FGameplayTag& AbilityTag,const float AbilityLevel)
 {
 	for (const auto& OutOverlap : DoOverlapMultiByChannel(Instigator,IgnoredActors,OriginPoint,RadiusOfEffect))
-		ApplyEffectToTarget(Instigator,OutOverlap.GetActor(),OutOverlap.GetActor()->GetActorLocation(),DamageEffectTag,AbilityLevel);
+		ApplyEffectToTarget(Instigator,OutOverlap.GetActor(),OutOverlap.GetActor()->GetActorLocation(),DamageEffectTag,AbilityTag,AbilityLevel);
 }
 void UAuraFunctionLibrary::ApplyRadialDamageEffectWithFallOff(AActor* Instigator,const TArray<AActor*>& IgnoredActors,const FVector& OriginPoint,const float InnerRadiusOfEffect,
-	const float OuterRadiusOfEffect,const FGameplayTag& DamageEffectTag,const float InnerAbilityLevel,const float OuterAbilityLevel)
+	const float OuterRadiusOfEffect,const FGameplayTag& DamageEffectTag,const FGameplayTag& AbilityTag,const float InnerAbilityLevel,const float OuterAbilityLevel)
 {
 	for (const auto& OutOverlap : DoOverlapMultiByChannel(Instigator,IgnoredActors,OriginPoint,OuterRadiusOfEffect))
 		if ((OriginPoint - OutOverlap.GetActor()->GetActorLocation()).Size() <= InnerRadiusOfEffect)
-			ApplyEffectToTarget(Instigator,OutOverlap.GetActor(),OutOverlap.GetActor()->GetActorLocation(),DamageEffectTag,InnerAbilityLevel);
+			ApplyEffectToTarget(Instigator,OutOverlap.GetActor(),OutOverlap.GetActor()->GetActorLocation(),AbilityTag,DamageEffectTag,InnerAbilityLevel);
 		else 
-			ApplyEffectToTarget(Instigator,OutOverlap.GetActor(),OutOverlap.GetActor()->GetActorLocation(),DamageEffectTag,
+			ApplyEffectToTarget(Instigator,OutOverlap.GetActor(),OutOverlap.GetActor()->GetActorLocation(),DamageEffectTag,AbilityTag,
 				InnerAbilityLevel - ((OriginPoint - OutOverlap.GetActor()->GetActorLocation()).Size() - InnerRadiusOfEffect) / (OuterRadiusOfEffect - InnerRadiusOfEffect) * (InnerAbilityLevel - OuterAbilityLevel));
 }
 AActor* UAuraFunctionLibrary::GetNearestLineOfSightActorWithInRadius(AActor* Target,TArray<AActor*> Root,const float SearchRadius)
@@ -188,7 +200,7 @@ void UAuraFunctionLibrary::CallFuncOnPointsCollectedOnTheGround(const UObject* W
 	Test::Shuffle(PointsOnTheGround);
 	FuncToCall(PointsOnTheGround);
 }
-AActor* UAuraFunctionLibrary::SpawnProjectile(AActor* Instigator,AActor* Target,FVector TargetLocation,FGameplayTag ProjectileID,float LifeTime,bool bLunchImpulse,const float AbilityLevel)
+AActor* UAuraFunctionLibrary::SpawnProjectile(AActor* Instigator,AActor* Target,FVector TargetLocation,FGameplayTag ProjectileID,float LifeTime,bool bLunchImpulse,bool bRotate,const FGameplayTag& AbilityTag,const float AbilityLevel)
 {
 	if (!Instigator->HasAuthority()) return nullptr;
 	TScriptInterface<ICombat> CombatCharacter = Instigator;
@@ -201,6 +213,15 @@ AActor* UAuraFunctionLibrary::SpawnProjectile(AActor* Instigator,AActor* Target,
 	SpawnedActor->SetActorRotation(UKismetMathLibrary::FindLookAtRotation(CombatCharacter->GetWeaponMechanicSocketTransform().GetLocation(),TargetLocation));
 	SpawnedActor->AbilityLevel = AbilityLevel;
 	SpawnedActor->LifeTime = LifeTime;
+	SpawnedActor->AssetTag = AbilityTag;
+	if (bRotate)
+	{
+		SpawnedActor->ProjectileMovementComponent->Deactivate();
+		SpawnedActor->AttachToActor(Instigator,FAttachmentTransformRules::KeepWorldTransform);
+		SpawnedActor->SetActorLocation(Instigator->GetActorLocation());
+		SpawnedActor->RotatingMovementComponent->RotationRate = FRotator(0.f,200.f,0.f);
+		SpawnedActor->RotatingMovementComponent->PivotTranslation = FVector(200,0,0);
+	}
 	if (bLunchImpulse)
 	{
 		SpawnedActor->ProjectileMovementComponent->AddForce(FVector(0,0,100));
@@ -212,7 +233,7 @@ AActor* UAuraFunctionLibrary::SpawnProjectile(AActor* Instigator,AActor* Target,
 		SpawnedActor->ProjectileMovementComponent->bRotationFollowsVelocity = true;
 		SpawnedActor->ProjectileMovementComponent->HomingAccelerationMagnitude = 2000.f;
 		SpawnedActor->ProjectileMovementComponent->HomingTargetComponent = Target->GetRootComponent();
-		Cast<ICombat>(Target)->GetOnDeathDelegate().AddLambda([SpawnedActor]()
+		Cast<ICombat>(Target)->GetOnDeathDelegate().AddLambda([SpawnedActor](AActor*)
 		{
 			SpawnedActor->ProjectileMovementComponent->HomingTargetComponent = nullptr;
 		});

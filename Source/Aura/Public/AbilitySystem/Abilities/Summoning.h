@@ -16,6 +16,8 @@ class AURA_API USummoning : public UGameplayAbility
 {
 	GENERATED_BODY()
 protected:
+	UFUNCTION()
+	void TraceUnderMouse(FGameplayEventData Payload);
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 private:
 	UPROPERTY(EditDefaultsOnly,Category=CPPVars)

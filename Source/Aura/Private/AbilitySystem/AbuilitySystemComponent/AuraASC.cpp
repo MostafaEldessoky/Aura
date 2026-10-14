@@ -16,21 +16,21 @@ UAuraASC::UAuraASC()
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicated(true);
 }
-void UAuraASC::Client_BroadCastPickUpItem_Implementation(const FGameplayEffectSpec& SpecApplied)
+void UAuraASC::Client_BroadCastPickUpItem_Implementation(const FGameplayTagContainer& TagContainer)
 {
-	FGameplayTagContainer TagContainer;
-	SpecApplied.GetAllAssetTags(TagContainer);
-	if (TagContainer.HasTag(Aura::UI::PickUp))
-		UAuraSubSystem::GetAuraSubSystem(this)->OnPickedUpEffectItem.Broadcast(TagContainer);
+	UAuraSubSystem::GetAuraSubSystem(this)->OnPickedUpEffectItem.Broadcast(TagContainer);
 }
 void UAuraASC::BeginPlay()
 {
 	Super::BeginPlay();
 	OnGameplayEffectAppliedDelegateToSelf.AddLambda( [this](UAbilitySystemComponent* ASC, 
-		const FGameplayEffectSpec& SpecApplied, FActiveGameplayEffectHandle ActiveHandle)
-     {
-        Client_BroadCastPickUpItem(SpecApplied);
-     });
+    	                                                        const FGameplayEffectSpec& SpecApplied, FActiveGameplayEffectHandle ActiveHandle)
+    	{
+    		FGameplayTagContainer TagContainer;
+    		SpecApplied.GetAllAssetTags(TagContainer);
+    		if (TagContainer.HasTag(Aura::UI::PickUp))
+    			Client_BroadCastPickUpItem(TagContainer);
+    	});
 	AuraAttributes = Cast<IAttributeInterface>(GetOwner())->GetAuraAttributes();
 	if (Cast<APlayerState>(GetOwner())) // Player State
 		UAuraFunctionLibrary::TickFuncUntil(this,[this](){return Cast<APlayerState>(GetOwner())->GetPawn() != nullptr;},
@@ -39,11 +39,11 @@ void UAuraASC::BeginPlay()
 			SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 			InitAbilityActorInfo(GetOwner(),Cast<APlayerState>(GetOwner())->GetPawn());
 			CombatCharacter = GetAvatarActor();
-			OnDeath();
 			InitializeAbilities(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CombatCharacter->GetCharacterID()].StartUpAbilities);
 			PlayerBroadcastAttributeChange();
 			PlayerLevelUp();
 			PlayerInputs();
+			OnDeath();
 			GetWorld()->GetTimerManager().SetTimer(InitializeStartupAttributesTimerHandle,this,&UAuraASC::PlayerInitializeStartupAttributes,0.5f,false);
 		});
 	else // Enemy Pawn
@@ -53,16 +53,16 @@ void UAuraASC::BeginPlay()
 			SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 			InitAbilityActorInfo(GetOwner(),GetOwner());
 			CombatCharacter = GetAvatarActor();
-			OnDeath();
 			InitializeAbilities(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CombatCharacter->GetCharacterID()].StartUpAbilities);
 			EnemyBroadcastAttributeChange();
+			OnDeath();
 			GetWorld()->GetTimerManager().SetTimer(InitializeStartupAttributesTimerHandle,this,&UAuraASC::EnemyInitializeStartupAttributes,0.5f,false);
 		});
 }
 void UAuraASC::PlayerBroadcastAttributeChange()
 {
 	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
-		for (const auto& temp : AuraAttributes->FuncPtrs)
+		for (const auto& temp : AuraAttributes->FuncPointers)
 			GetGameplayAttributeValueChangeDelegate(temp()).AddLambda([this](const FOnAttributeChangeData& Data)
 			{
 				UAuraSubSystem::GetAuraSubSystem(this)->OnAttributeChangedPlayer.Broadcast(Data.Attribute.GetName(),Data.Attribute.GetNumericValue(AuraAttributes.Get()));
@@ -78,12 +78,11 @@ void UAuraASC::PlayerLevelUp()
 }
 void UAuraASC::Server_ApplyLevelUpEffect_Implementation(const FString& AttributeName)
 {
-	// if (UUtilities::PointLevel <= 0) return; // need way to authrize level up upon requist
 	const auto InputTag = UAuraFunctionLibrary::MakeAttributeTagFromName(AttributeName);
-	ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(
-		UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[InputTag],
-		1,
-		MakeEffectContext()).Data.Get());
+	auto temp = Cast<IAttributeInterface>(GetAvatarActor())->GetAuraAttributes();
+	if (temp->GetXP() >= temp->GetMaxXP())
+		ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[InputTag],
+			1,MakeEffectContext()).Data.Get());
 }
 void UAuraASC::PlayerInitializeStartupAttributes()
 {
@@ -93,7 +92,7 @@ void UAuraASC::PlayerInitializeStartupAttributes()
 }
 void UAuraASC::EnemyBroadcastAttributeChange()
 {
-	for (const auto& temp : AuraAttributes->FuncPtrs)
+	for (const auto& temp : AuraAttributes->FuncPointers)
 		GetGameplayAttributeValueChangeDelegate(temp()).AddLambda([this](const FOnAttributeChangeData& Data)
 		{
 			if (AuraAttributes->GetHealthAttribute() == Data.Attribute || AuraAttributes->GetMaxHealthAttribute() == Data.Attribute || AuraAttributes->GetManaAttribute() == Data.Attribute || AuraAttributes->GetMaxManaAttribute() == Data.Attribute)
@@ -111,16 +110,21 @@ void UAuraASC::InitializeAbilities(TArray<FGameplayTag> AbilitiesTags)
 	if (Cast<APawn>(GetAvatarActor())->HasAuthority())
 	{
 		for (const auto& temp : AbilitiesTags)
-			GiveAbility(FGameplayAbilitySpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->AbilitiesClasses[temp]));
+			GiveAbility(FGameplayAbilitySpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->AbilitiesClasses[temp].AbilityClass));
 	}
 	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
+	{
+		TryActivateAbilitiesByTag(Aura::Abilities::TraceUnderMouse.GetTag().GetSingleTagContainer());
 		TryActivateAbilitiesByTag(Aura::Abilities::HighLight.GetTag().GetSingleTagContainer());
+	}
 }
 void UAuraASC::OnDeath()
 {
-	CombatCharacter->GetOnDeathDelegate().AddLambda([this]()
+	CombatCharacter->GetOnDeathDelegate().AddLambda([this](AActor* Killer)
 	{
-		TryActivateAbilitiesByTag(Aura::Abilities::Death.GetTag().GetSingleTagContainer());
+		FGameplayEventData EventData;
+		EventData.Target = Killer;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),Aura::Abilities::Death,EventData);
 	});
 }
 void UAuraASC::PlayerInputs()
@@ -128,9 +132,8 @@ void UAuraASC::PlayerInputs()
 	if (!Cast<APawn>(GetAvatarActor())->IsLocallyControlled()) return;
 	UAuraSubSystem::GetAuraSubSystem(this)->OnInputPressed.AddLambda([this](FGameplayTag Key)
 	{
-		TArray<FGameplayAbilitySpec*> MatchingGameplayAbilities;
-		GetActivatableGameplayAbilitySpecsByAllMatchingTags(Key.GetSingleTagContainer(),MatchingGameplayAbilities);
-		TryActivateAbility(MatchingGameplayAbilities[0]->Handle);
+		FGameplayEventData EventData;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),Key,EventData);
 	});
 	UAuraSubSystem::GetAuraSubSystem(this)->OnInputReleased.AddLambda([this](FGameplayTag Key)
 	{

@@ -24,16 +24,16 @@ public:
 	static FGameplayTag MakeAttributeTagFromName(const FString& AttributeName);
 	static TArray<FOverlapResult> DoOverlapMultiByChannel(AActor* Instigator,const TArray<AActor*>& IgnoredActors,const FVector& OriginPoint,
 		const float RadiusOfEffect);
-	static void ApplyEffectToTarget(AActor* Instigator,AActor* Target,const FVector& ImpactPoint,const FGameplayTag& DamageEffectTag,const float AbilityLevel);
+	static void ApplyEffectToTarget(AActor* Instigator,AActor* Target,const FVector& ImpactPoint,const FGameplayTag& EffectTag,const FGameplayTag& AbilityTag,const float AbilityLevel);
 	static void ApplyEffectToTargetWithCue_NonReplicated(AActor* Instigator,AActor* Target,const FVector& ImpactPoint,
-		const FGameplayTag& CueTag,const FGameplayTag& DamageEffectTag,const float AbilityLevel);
+		const FGameplayTag& CueTag,const FGameplayTag& DamageEffectTag,const FGameplayTag& AbilityTag,const float AbilityLevel);
 	static void ApplyRadialDamageEffect(AActor* Instigator,const TArray<AActor*>& IgnoredActors,const FVector& OriginPoint,
-		const float RadiusOfEffect,const FGameplayTag& DamageEffectTag,const float AbilityLevel);
+		const float RadiusOfEffect,const FGameplayTag& DamageEffectTag,const FGameplayTag& AbilityTag,const float AbilityLevel);
 	static void ApplyRadialDamageEffectWithFallOff(AActor* Instigator,const TArray<AActor*>& IgnoredActors,const FVector& OriginPoint,const float InnerRadiusOfEffect,
-	const float OuterRadiusOfEffect,const FGameplayTag& DamageEffectTag,const float InnerAbilityLevel,const float OuterAbilityLevel);
+	const float OuterRadiusOfEffect,const FGameplayTag& DamageEffectTag,const FGameplayTag& AbilityTag,const float InnerAbilityLevel,const float OuterAbilityLevel);
 	static AActor* GetNearestLineOfSightActorWithInRadius(AActor* Target,TArray<AActor*> Root,const float SearchRadius);
 	static TArray<FVector> GetBoundedVectors(const FVector& StartVector,const FVector& EndVector,const FVector& OriginPoint,const int32& NumOfVectors);
 	static void CallFuncOnPointsCollectedOnTheGround(const UObject* WorldContextObject,const bool& IsForAI,FVector StartPoint,const float& RadiusOfActivation, std::function<void(TArray<FVector>&)> FuncToCall);
-	static AActor* SpawnProjectile(AActor* Instigator,AActor* Target,FVector TargetLocation,FGameplayTag ProjectileID,float LifeTime,bool bLunchImpulse,const float AbilityLevel);
+	static AActor* SpawnProjectile(AActor* Instigator,AActor* Target,FVector TargetLocation,FGameplayTag ProjectileID,float LifeTime,bool bLunchImpulse,bool bRotate,const FGameplayTag& AbilityTag,const float AbilityLevel);
 	static void PlayMontageAndWaitNotify(UGameplayAbility* OwnedAbility,AActor* Instigator,FVector TargetLocation,FGameplayTag PlayedMontageTag, FGameplayTag AnimNotifyTag,FName FuncToCall);
 };

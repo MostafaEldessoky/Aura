@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "GameplayTags.h"
+#include "ScalableFloat.h"
+#include "AttributeSet.h"
+#include "GameplayEffect.h"
 #include "AuraData.generated.h"
 
 class UBehaviorTree;
@@ -15,7 +18,14 @@ class UGameplayAbility;
 class UGameplayEffect;
 class UInputAction;
 class UInputMappingContext;
+class UAttributeSet;
 
+UENUM() enum class EDamageType : uint8
+{
+	None,
+	Physical,
+	Magical
+};
 USTRUCT(Blueprintable) struct FCharacterData
 {
 	GENERATED_BODY()
@@ -80,6 +90,42 @@ USTRUCT(Blueprintable) struct FUIData
 	UPROPERTY(EditDefaultsOnly)
 	UTexture2D* MassageImage;
 };
+USTRUCT(BlueprintType) struct FBuffData
+{
+	GENERATED_BODY()
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayAttribute EffectedAttribute;
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag GrantedTag;
+	UPROPERTY(EditDefaultsOnly)
+	float Chance;
+	UPROPERTY(EditDefaultsOnly)
+	float Damage;
+	UPROPERTY(EditDefaultsOnly)
+	float Duration;
+	UPROPERTY(EditDefaultsOnly)
+	float Period;
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayEffectCue GameplayCues;
+};
+USTRUCT(BlueprintType) struct FAbilitiesData
+{
+	GENERATED_BODY()
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayAbility> AbilityClass;
+	UPROPERTY(EditDefaultsOnly)
+	EDamageType DamageType;
+	UPROPERTY(EditDefaultsOnly)
+	FScalableFloat Damage;
+	UPROPERTY(EditDefaultsOnly)
+	FScalableFloat Cost;
+	UPROPERTY(EditDefaultsOnly)
+	FScalableFloat Cooldown;
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer PassiveTags;
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FBuffData> BuffsToApply;
+};
 UCLASS(Blueprintable)
 class AURA_API UAuraData : public UDataAsset
 {
@@ -96,9 +142,13 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FGameplayTag,FCharacterData> DataPerCharacter;
 	UPROPERTY(EditDefaultsOnly)
-	TMap<FGameplayTag,TSubclassOf<UGameplayAbility>> AbilitiesClasses;
+	TMap<FGameplayTag,FAbilitiesData> AbilitiesClasses;
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FGameplayTag,TSubclassOf<UGameplayEffect>> EffectsClasses;
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FGameplayTag,TSubclassOf<AProjectile>> ProjectilesClasses;
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FGameplayTag,int32> OnApplyEffectsToTargetOrder;
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FGameplayTag,int32> OnApplyEffectsToSelfOrder;
 };

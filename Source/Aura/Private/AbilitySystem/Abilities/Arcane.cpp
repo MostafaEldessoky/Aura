@@ -8,9 +8,9 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "AbilitySystem/Tasks/AbilityTask_SendRandomPointsToServer.h"
-#include "AbilitySystem/Tasks/AbilityTask_TargetDataUnderMouse.h"
-#include "AbilitySystem/Tasks/AbilityTask_TraceUnderMouse.h"
+#include "AbilitySystem/Tasks/AbilityTask_SendTargetDataToServer.h"
 #include "Components/DecalComponent.h"
+#include "Data/Tags.h"
 #include "Interfaces/Combat.h"
 #include "Statics/AuraFunctionLibrary.h"
 
@@ -29,12 +29,26 @@ void UArcane::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 		decal->Activate();
 		decal->SetVisibility(true);
 	}
-	auto TraceUnderMouseTask = UAbilityTask_TraceUnderMouse::TraceUnderMouse(this);
-	TraceUnderMouseTask->OnTraceUnderMouse.AddLambda([this](FHitResult HitResult)
+	auto WaitGameplayEventTraceUnderMouse = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,Aura::Abilities::TraceUnderMouse);
+	WaitGameplayEventTraceUnderMouse->EventReceived.AddDynamic(this,&UArcane::TraceUnderMouse);
+	WaitGameplayEventTraceUnderMouse->ReadyForActivation();
+}
+void UArcane::TraceUnderMouse(FGameplayEventData Payload)
+{
+	if (decal && GetCurrentActorInfo()->IsLocallyControlled()) 
+		decal->SetWorldLocation(Payload.TargetData.Get(0)->GetHitResult()->ImpactPoint);
+	if (bIsInputReleased)
 	{
-		if (decal && GetCurrentActorInfo()->IsLocallyControlled()) decal->SetWorldLocation(HitResult.ImpactPoint);
-	});
-	TraceUnderMouseTask->ReadyForActivation();
+		bIsInputReleased = false;
+		auto TargetDataTask = UAbilityTask_SendTargetDataToServer::SendTargetDataToServer(this,Payload.TargetData);
+		TargetDataTask->OnTargetDataUnderMouse.AddLambda([this](FGameplayAbilityTargetDataHandle TargetData)
+		{
+			Target = *TargetData.Get(0)->GetHitResult();
+			UAuraFunctionLibrary::PlayMontageAndWaitNotify(this,GetAvatarActorFromActorInfo(),Target.ImpactPoint,
+			PlayedMontageTag,AnimNotifyTag,STATIC_FUNCTION_FNAME(TEXT("UArcane::OnGameplayEventReceivedFromAnimNotify")));
+		});
+		TargetDataTask->ReadyForActivation();
+	}
 }
 void UArcane::OnInputReleased(float TimeHeld)
 {
@@ -45,14 +59,7 @@ void UArcane::OnInputReleased(float TimeHeld)
 		decal = nullptr;
 		GetCurrentActorInfo()->PlayerController->bShowMouseCursor = true;
 	}
-	auto TargetDataTask = UAbilityTask_TargetDataUnderMouse::GetTargetDataUnderMouse(this);
-	TargetDataTask->OnTargetDataUnderMouse.AddLambda([this](FHitResult HitResult)
-	{
-		Target = HitResult;
-		UAuraFunctionLibrary::PlayMontageAndWaitNotify(this,GetAvatarActorFromActorInfo(),Target.ImpactPoint,
-			PlayedMontageTag,AnimNotifyTag,STATIC_FUNCTION_FNAME(TEXT("UArcane::OnGameplayEventReceivedFromAnimNotify")));
-	});
-	TargetDataTask->ReadyForActivation();
+	bIsInputReleased = true;
 }
 void UArcane::OnGameplayEventReceivedFromAnimNotify(FGameplayEventData Payload)
 {
@@ -68,11 +75,12 @@ void UArcane::OnGameplayEventReceivedFromAnimNotify(FGameplayEventData Payload)
 			{
 				UGameplayCueFunctionLibrary::ExecuteGameplayCueOnActor(GetAvatarActorFromActorInfo(),ArcaneCueTag,Params);
 				UAuraFunctionLibrary::ApplyRadialDamageEffectWithFallOff(GetAvatarActorFromActorInfo(),TArray{GetAvatarActorFromActorInfo()},
-					Point,RadiusOfActivation/2,RadiusOfActivation,DamageEffectTag,GetAbilityLevel(),GetAbilityLevel()-1);
+					Point,RadiusOfActivation/2,RadiusOfActivation,DamageEffectTag,GetAssetTags().First(),GetAbilityLevel(),GetAbilityLevel()-1);
 			}
 			else
 				UGameplayCueManager::ExecuteGameplayCue_NonReplicated(GetAvatarActorFromActorInfo(),ArcaneCueTag,Params);
 		}
+		CommitAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo);
 		EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,false,false);
 	});
 	temp->ReadyForActivation();

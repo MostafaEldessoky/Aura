@@ -14,10 +14,13 @@ class AURA_API UElectrocute : public UGameplayAbility
 {
 	GENERATED_BODY()
 protected:
+	UFUNCTION()
+	void TraceUnderMouse(FGameplayEventData Payload);
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
 private:
 	bool bInputReleased{false};
+	bool bOneTrace{false};
 	bool bCueActivated{false};
 	FHitResult Target;
 	FTimerHandle ElectrocuteTimerHandle;

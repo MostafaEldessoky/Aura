@@ -20,7 +20,7 @@ public:
 	virtual void BeginPlay() override;
 private:
 	UFUNCTION(Client, Reliable)
-	void Client_BroadCastPickUpItem(const FGameplayEffectSpec& SpecApplied);
+	void Client_BroadCastPickUpItem(const FGameplayTagContainer& SpecApplied);
 	UFUNCTION(Server, Reliable)
 	void Server_ApplyLevelUpEffect(const FString& AttributeName);
 	void InitializeAbilities(TArray<FGameplayTag> AbilitiesTags);

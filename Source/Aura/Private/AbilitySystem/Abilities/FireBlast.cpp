@@ -2,7 +2,7 @@
 
 
 #include "AbilitySystem/Abilities/FireBlast.h"
-#include "AbilitySystem/Tasks/AbilityTask_TargetDataUnderMouse.h"
+#include "AbilitySystem/Tasks/AbilityTask_SendTargetDataToServer.h"
 #include "Interfaces/Combat.h"
 #include "Statics/AuraFunctionLibrary.h"
 
@@ -14,8 +14,8 @@ void UFireBlast::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const 
 	CombatInterface = GetAvatarActorFromActorInfo();
 	for (const auto& temp : UAuraFunctionLibrary::GetBoundedVectors(CombatInterface->GetWeaponMechanicSocketTransform().GetLocation(),
 	CombatInterface->GetWeaponMechanicSocketTransform().GetLocation(),
-	CombatInterface->GetWeaponMechanicSocketTransform().GetLocation(),ProjectileCount))
-		UAuraFunctionLibrary::SpawnProjectile(GetAvatarActorFromActorInfo(),nullptr,temp,ProjectileID,5.f,
-		true,GetAbilityLevel());
+	CombatInterface->GetWeaponMechanicSocketTransform().GetLocation(),GetAbilityLevel()*2))
+		UAuraFunctionLibrary::SpawnProjectile(GetAvatarActorFromActorInfo(),nullptr,temp,ProjectileID,1.8f,
+		false,true,GetAssetTags().First(),GetAbilityLevel());
 	EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,false,false);
 }

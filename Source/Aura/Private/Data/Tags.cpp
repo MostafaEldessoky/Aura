@@ -3,6 +3,10 @@
 
 namespace Aura
 {
+	namespace SetByCaller
+	{
+		UE_DEFINE_GAMEPLAY_TAG(Damage,"Aura.SetByCaller.Damage")
+	}
 	namespace Characters
 	{
 		UE_DEFINE_GAMEPLAY_TAG(Player,"Aura.Characters.Player")
@@ -36,13 +40,20 @@ namespace Aura
 	}
 	namespace Abilities
 	{
+		namespace Passive
+		{
+			UE_DEFINE_GAMEPLAY_TAG(CriticalChance,"Aura.Abilities.Passive.CriticalChance")
+			UE_DEFINE_GAMEPLAY_TAG(LifeSteal,"Aura.Abilities.Passive.LifeSteal")
+			UE_DEFINE_GAMEPLAY_TAG(PhysicalPenetration,"Aura.Abilities.Passive.PhysicalPenetration")
+			UE_DEFINE_GAMEPLAY_TAG(MagicalPenetration,"Aura.Abilities.Passive.MagicalPenetration")
+			
+		}
 		UE_DEFINE_GAMEPLAY_TAG(HighLight,"Aura.Abilities.HighLight")
+		UE_DEFINE_GAMEPLAY_TAG(TraceUnderMouse,"Aura.Abilities.TraceUnderMouse")
 		UE_DEFINE_GAMEPLAY_TAG(PrimaryAttack,"Aura.Abilities.PrimaryAttack")
 		UE_DEFINE_GAMEPLAY_TAG(MoveTo,"Aura.Abilities.MoveTo")
 		UE_DEFINE_GAMEPLAY_TAG(StopMove,"Aura.Abilities.StopMove")
 		UE_DEFINE_GAMEPLAY_TAG(MeleeAttack,"Aura.Abilities.MeleeAttack")
-		UE_DEFINE_GAMEPLAY_TAG(ThrowDirectionalProjectile,"Aura.Abilities.ThrowDirectionalProjectile")
-		UE_DEFINE_GAMEPLAY_TAG(ThrowFollowUpProjectile,"Aura.Abilities.ThrowFollowUpProjectile")
 		UE_DEFINE_GAMEPLAY_TAG(Summoning,"Aura.Abilities.Summoning")
 		UE_DEFINE_GAMEPLAY_TAG(HitReact,"Aura.Abilities.HitReact")
 		UE_DEFINE_GAMEPLAY_TAG(Death,"Aura.Abilities.Death")

@@ -17,7 +17,10 @@ class AURA_API UDeath : public UGameplayAbility
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 private:
-	TScriptInterface<ICombat> CombatCharacter;
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag DeathBehaviorTag;
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag DissolveCueTag;
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag XPTag;
 };
