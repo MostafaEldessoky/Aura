@@ -1,6 +1,5 @@
 ﻿// Mostafa Eldesouky
 
-
 #include "AbilitySystem/AbilitySystemComponent/AuraASC.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/Attribute/AuraAttributes.h"
@@ -23,14 +22,22 @@ void UAuraASC::Client_BroadCastPickUpItem_Implementation(const FGameplayTagConta
 void UAuraASC::BeginPlay()
 {
 	Super::BeginPlay();
+	OnActiveGameplayEffectAddedDelegateToSelf.AddLambda([this](UAbilitySystemComponent* ASC, 
+																const FGameplayEffectSpec& SpecApplied, FActiveGameplayEffectHandle ActiveHandle)
+	{
+		FGameplayTagContainer TagContainer;
+		SpecApplied.GetAllGrantedTags(TagContainer);
+		if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled() && TagContainer.HasTag(Aura::Cooldown::Cooldown))
+			UAuraSubSystem::GetAuraSubSystem(this)->OnCooldownStart.Broadcast(TagContainer.First(),SpecApplied.Duration);
+	});
 	OnGameplayEffectAppliedDelegateToSelf.AddLambda( [this](UAbilitySystemComponent* ASC, 
     	                                                        const FGameplayEffectSpec& SpecApplied, FActiveGameplayEffectHandle ActiveHandle)
-    	{
-    		FGameplayTagContainer TagContainer;
-    		SpecApplied.GetAllAssetTags(TagContainer);
-    		if (TagContainer.HasTag(Aura::UI::PickUp))
-    			Client_BroadCastPickUpItem(TagContainer);
-    	});
+    {
+    	FGameplayTagContainer TagContainer;
+    	SpecApplied.GetAllAssetTags(TagContainer);
+    	if (TagContainer.HasTag(Aura::UI::PickUp))
+    		Client_BroadCastPickUpItem(TagContainer);
+    });
 	AuraAttributes = Cast<IAttributeInterface>(GetOwner())->GetAuraAttributes();
 	if (Cast<APlayerState>(GetOwner())) // Player State
 		UAuraFunctionLibrary::TickFuncUntil(this,[this](){return Cast<APlayerState>(GetOwner())->GetPawn() != nullptr;},
@@ -45,6 +52,24 @@ void UAuraASC::BeginPlay()
 			PlayerInputs();
 			OnDeath();
 			GetWorld()->GetTimerManager().SetTimer(InitializeStartupAttributesTimerHandle,this,&UAuraASC::PlayerInitializeStartupAttributes,0.5f,false);
+			UAuraSubSystem::GetAuraSubSystem(this)->OnUnlockAbility.AddLambda([this](FGameplayTag AbilityTag)
+			{
+				GiveAbility(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->AbilitiesClasses[AbilityTag].AbilityClass);
+			});
+			UAuraSubSystem::GetAuraSubSystem(this)->OnAssignAbilityToInput.AddLambda([this](FGameplayTagContainer AbilityToInputTags)
+			{
+				for (const auto& AbilityToInputTag : AbilityToInputTags)
+					if (AbilityToInputTag.MatchesTag(Aura::Abilities::Abilities))
+					{
+						TArray<FGameplayAbilitySpec*> OutAbilitySpecs;
+						GetActivatableGameplayAbilitySpecsByAllMatchingTags(AbilityToInputTag.GetSingleTagContainer(),OutAbilitySpecs);
+						const_cast<FGameplayTagContainer&>(OutAbilitySpecs[0]->Ability.Get()->GetAssetTags()).Reset();
+						for (const auto& temp : AbilityToInputTags)
+							const_cast<FGameplayTagContainer&>(OutAbilitySpecs[0]->Ability.Get()->GetAssetTags()).AddTag(temp);
+						MarkAbilitySpecDirty(*OutAbilitySpecs[0]);
+						break;
+					}
+			});
 		});
 	else // Enemy Pawn
 		UAuraFunctionLibrary::TickFuncUntil(this,[this](){return GetOwner() != nullptr;},
@@ -59,6 +84,17 @@ void UAuraASC::BeginPlay()
 			GetWorld()->GetTimerManager().SetTimer(InitializeStartupAttributesTimerHandle,this,&UAuraASC::EnemyInitializeStartupAttributes,0.5f,false);
 		});
 }
+
+void UAuraASC::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
+{
+	Super::OnGiveAbility(AbilitySpec);
+	if (!Cast<APlayerState>(GetOwner())) 
+		return;
+	for (const auto& temp : AbilitySpec.Ability.Get()->GetAssetTags())
+		if (temp.MatchesTag(Aura::Abilities::Abilities))
+			UAuraSubSystem::GetAuraSubSystem(this)->OnGiveAbility.Broadcast(temp);
+}
+
 void UAuraASC::PlayerBroadcastAttributeChange()
 {
 	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
@@ -132,14 +168,19 @@ void UAuraASC::PlayerInputs()
 	if (!Cast<APawn>(GetAvatarActor())->IsLocallyControlled()) return;
 	UAuraSubSystem::GetAuraSubSystem(this)->OnInputPressed.AddLambda([this](FGameplayTag Key)
 	{
-		FGameplayEventData EventData;
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),Key,EventData);
+		TryActivateAbilitiesByTag(Key.GetSingleTagContainer());
 	});
 	UAuraSubSystem::GetAuraSubSystem(this)->OnInputReleased.AddLambda([this](FGameplayTag Key)
 	{
 		TArray<FGameplayAbilitySpec*> MatchingGameplayAbilities;
 		GetActivatableGameplayAbilitySpecsByAllMatchingTags(Key.GetSingleTagContainer(),MatchingGameplayAbilities);
-		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased,MatchingGameplayAbilities[0]->Handle,
-			MatchingGameplayAbilities[0]->GetPrimaryInstance()->GetCurrentActivationInfo().GetActivationPredictionKey());
+		if (MatchingGameplayAbilities.Num() == 0) 
+			return;
+		FGameplayTagContainer ReleaseInputsAbilities;
+		ReleaseInputsAbilities.AddTag(Aura::Abilities::Arcane);
+		ReleaseInputsAbilities.AddTag(Aura::Abilities::Electrocute);
+		if (MatchingGameplayAbilities[0]->Ability.Get()->GetAssetTags().HasAnyExact(ReleaseInputsAbilities))
+			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased,MatchingGameplayAbilities[0]->Handle,
+				MatchingGameplayAbilities[0]->GetPrimaryInstance()->GetCurrentActivationInfo().GetActivationPredictionKey());
 	});
 }

@@ -14,7 +14,7 @@ UCLASS()
 class AURA_API AAuraHUD : public AHUD
 {
 	GENERATED_BODY()
-	
+
 protected:
 	virtual void BeginPlay() override;
 private:

@@ -61,7 +61,7 @@ void UAuraFunctionLibrary::ApplyEffectToTarget(AActor* Instigator, AActor* Targe
 {
 	auto temp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Instigator);
 	auto temp1 = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Target);
-	if (!temp || !temp1) return;
+	if (!temp || !temp1 || !temp->GetAvatarActor()->HasAuthority()) return;
 	auto EffectContext = temp->MakeEffectContext();
 	EffectContext.AddActors(TArray{TWeakObjectPtr(Target)});
 	EffectContext.AddOrigin(ImpactPoint);

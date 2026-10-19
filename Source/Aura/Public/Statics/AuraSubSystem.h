@@ -16,6 +16,10 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnPickedUpEffectItem, FGameplayTagContainer
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedPlayer,const FString&,float)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAttributeChangedEnemy,FString,const FString&,float)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnNeedLevelUpAttribute,const FString&)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCooldownBegain,FGameplayTag,float)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnGiveAbility,FGameplayTag)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnlockAbility,FGameplayTag)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnAssignAbilityToInput, FGameplayTagContainer)
 /**
  * 
  */
@@ -33,4 +37,8 @@ public:
     FOnAttributeChangedPlayer OnAttributeChangedPlayer;
     FOnAttributeChangedEnemy OnAttributeChangedEnemy;
     FOnNeedLevelUpAttribute OnNeedLevelUpAttribute;
+	FOnCooldownBegain OnCooldownStart;
+	FOnGiveAbility OnGiveAbility;
+	FOnUnlockAbility OnUnlockAbility;
+	FOnAssignAbilityToInput OnAssignAbilityToInput;
 };

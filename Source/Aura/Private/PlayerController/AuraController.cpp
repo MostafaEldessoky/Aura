@@ -34,7 +34,7 @@ void AAuraController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	auto ESC = Cast<UEnhancedInputComponent>(InputComponent);
-	for (const auto& temp : UAuraSubSystem::GetAuraSubSystem(this)->AuraData->InputData.InputActionsStarted)
+	for (const auto& temp : UAuraSubSystem::GetAuraSubSystem(this)->AuraData->InputData.InputActions)
 		ESC->BindActionValueLambda(temp.Value,ETriggerEvent::Started,[this,temp](const FInputActionValue& Value)
 		{
 			if (temp.Key.MatchesTagExact(Aura::InputActions::RMB))
@@ -42,7 +42,7 @@ void AAuraController::SetupInputComponent()
 			else 
 				UAuraSubSystem::GetAuraSubSystem(this)->OnInputPressed.Broadcast(temp.Key);
 		});
-	for (const auto& temp : UAuraSubSystem::GetAuraSubSystem(this)->AuraData->InputData.InputActionsCompleted)
+	for (const auto& temp : UAuraSubSystem::GetAuraSubSystem(this)->AuraData->InputData.InputActions)
 		ESC->BindActionValueLambda(temp.Value,ETriggerEvent::Completed,[this,temp](const FInputActionValue& Value)
 		{
 			UAuraSubSystem::GetAuraSubSystem(this)->OnInputReleased.Broadcast(temp.Key);

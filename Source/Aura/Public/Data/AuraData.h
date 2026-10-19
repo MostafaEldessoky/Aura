@@ -76,9 +76,7 @@ USTRUCT(Blueprintable) struct FInputsData
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FGameplayTag,UInputMappingContext*> InputMappingContext;
 	UPROPERTY(EditDefaultsOnly)
-	TMap<FGameplayTag,UInputAction*> InputActionsStarted;
-	UPROPERTY(EditDefaultsOnly)
-	TMap<FGameplayTag,UInputAction*> InputActionsCompleted;
+	TMap<FGameplayTag,UInputAction*> InputActions;
 };
 USTRUCT(Blueprintable) struct FUIData
 {

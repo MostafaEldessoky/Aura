@@ -20,6 +20,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual UAuraAttributes* GetAuraAttributes() const override;
+	
 private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAuraASC> AuraASC;
