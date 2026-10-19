@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Interfaces/ProgressBarInterface.h"
 #include "ProgressBarWidget.generated.h"
 
 class UProgressBar;
@@ -11,20 +12,21 @@ class UProgressBar;
  * 
  */
 UCLASS()
-class AURA_API UProgressBarWidget : public UUserWidget
+class AURA_API UProgressBarWidget : public UUserWidget, public IProgressBarInterface
 {
 	GENERATED_BODY()
 public:
-	FString EnemyName;
+	virtual void SetActorName(FString Name)  override;
 protected:
 	virtual void NativeOnInitialized() override;
 private:
 	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
-	bool bIsPlayer{true};
+	bool bForWidgetComp{false};
 	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
 	FString Attribute;
 	FString MaxAttribute;
 	float MaxAttributeAmount{1};
 	UPROPERTY(meta=(BindWidget))
 	UProgressBar* ProgressBar;
+	FString ActorName;
 };

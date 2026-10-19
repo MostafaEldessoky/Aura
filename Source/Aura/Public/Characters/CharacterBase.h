@@ -10,6 +10,7 @@
 #include "Interfaces/Combat.h"
 #include "CharacterBase.generated.h"
 
+class UWidgetComponent;
 class UMotionWarpingComponent;
 
 UCLASS()
@@ -31,11 +32,14 @@ public:
 	virtual FGameplayTag GetCharacterID() override;
 	virtual FOnDeath& GetOnDeathDelegate() override;
 	virtual UDecalComponent* GetDecalComponent() override;
+	virtual bool IsWidgetComponentValid() override;
 protected:
 	UPROPERTY(VisibleAnywhere,Category="CPPVars")
 	USkeletalMeshComponent* WeaponMesh;
 	UPROPERTY(VisibleAnywhere,Category="CPPVars")
 	UMotionWarpingComponent* MotionWarpingComponent;
+	UPROPERTY(VisibleAnywhere)
+	UWidgetComponent* WidgetComponent;
 	FOnDeath OnDeathDelegate;
 private:
 	UPROPERTY(EditDefaultsOnly)

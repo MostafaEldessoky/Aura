@@ -32,8 +32,6 @@ private:
 	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
 	float ElectrocuteSearchRadius{500.f};
 	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
-	int32 NumberOfTargets{1};
-	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
 	FGameplayTag InputReleasedTag;
 	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
 	FGameplayTag PlayedMontageTag;

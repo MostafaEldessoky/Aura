@@ -6,7 +6,6 @@
 #include "Characters/CharacterBase.h"
 #include "AuraEnemyBase.generated.h"
 
-class UWidgetComponent;
 class UAuraAttributes;
 class UAuraASC;
 
@@ -17,14 +16,12 @@ class AURA_API AAuraEnemyBase : public ACharacterBase
 
 public:
 	AAuraEnemyBase();
-	virtual void BeginPlay() override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual UAuraAttributes* GetAuraAttributes() const override;
+	
 private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAuraASC> AuraASC;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAuraAttributes> AuraAttributes;
-	UPROPERTY(VisibleAnywhere)
-	UWidgetComponent* WidgetComponent;
 };

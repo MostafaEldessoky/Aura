@@ -21,10 +21,13 @@ void UTraceUnderMouse::TraceUnderMouse()
 	GetCurrentActorInfo()->PlayerController.Get()->GetHitResultUnderCursor(
 		UAuraSubSystem::GetAuraSubSystem(this)->AuraData->CollisionsData.MouseTraceChannel,
 		false,HitResult);
-	FGameplayEventData EventData;
-	FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
-	EventData.TargetData.Add(TargetData);
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActorFromActorInfo(),Aura::Abilities::TraceUnderMouse,EventData);
+	if (HitResult.GetActor() != GetAvatarActorFromActorInfo())
+	{
+		FGameplayEventData EventData;
+		FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
+		EventData.TargetData.Add(TargetData);
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActorFromActorInfo(),Aura::Abilities::TraceUnderMouse,EventData);	
+	}
 	GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
 		{
 			TraceUnderMouse();

@@ -61,7 +61,7 @@ void UAuraFunctionLibrary::ApplyEffectToTarget(AActor* Instigator, AActor* Targe
 {
 	auto temp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Instigator);
 	auto temp1 = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Target);
-	if (!temp || !temp1) return;
+	if (!temp || !temp1 || !temp->GetAvatarActor()->HasAuthority()) return;
 	auto EffectContext = temp->MakeEffectContext();
 	EffectContext.AddActors(TArray{TWeakObjectPtr(Target)});
 	EffectContext.AddOrigin(ImpactPoint);
@@ -204,7 +204,7 @@ AActor* UAuraFunctionLibrary::SpawnProjectile(AActor* Instigator,AActor* Target,
 {
 	if (!Instigator->HasAuthority()) return nullptr;
 	TScriptInterface<ICombat> CombatCharacter = Instigator;
-	if (!CombatCharacter) return nullptr;
+	if (!CombatCharacter || Instigator == Target) return nullptr;
 	auto SpawnedActor = Instigator->GetWorld()->SpawnActorDeferred<AProjectile>(
 		UAuraSubSystem::GetAuraSubSystem(Instigator)->AuraData->ProjectilesClasses[ProjectileID],
 		CombatCharacter->GetWeaponMechanicSocketTransform(),
@@ -233,10 +233,11 @@ AActor* UAuraFunctionLibrary::SpawnProjectile(AActor* Instigator,AActor* Target,
 		SpawnedActor->ProjectileMovementComponent->bRotationFollowsVelocity = true;
 		SpawnedActor->ProjectileMovementComponent->HomingAccelerationMagnitude = 2000.f;
 		SpawnedActor->ProjectileMovementComponent->HomingTargetComponent = Target->GetRootComponent();
-		Cast<ICombat>(Target)->GetOnDeathDelegate().AddLambda([SpawnedActor](AActor*)
-		{
-			SpawnedActor->ProjectileMovementComponent->HomingTargetComponent = nullptr;
-		});
+		if (Cast<ICombat>(Target))
+			Cast<ICombat>(Target)->GetOnDeathDelegate().AddLambda([SpawnedActor](AActor*)
+			{
+				SpawnedActor->ProjectileMovementComponent->HomingTargetComponent = nullptr;
+			});
 	}
 	SpawnedActor->FinishSpawning(CombatCharacter->GetWeaponMechanicSocketTransform());
 	return SpawnedActor;

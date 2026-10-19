@@ -7,6 +7,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Statics/AuraSubSystem.h"
 #include "MotionWarpingComponent.h"
+#include "Components/WidgetComponent.h"
+#include "Interfaces/ProgressBarInterface.h"
 
 
 ACharacterBase::ACharacterBase()
@@ -21,10 +23,13 @@ ACharacterBase::ACharacterBase()
 	bUseControllerRotationRoll = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>("MotionWarpingComponent");
+	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetComponent"));
+	WidgetComponent->SetupAttachment(GetRootComponent());
 }
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+	Cast<IProgressBarInterface>(WidgetComponent->GetUserWidgetObject())->SetActorName(GetName());
 	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
 	WeaponMesh->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale,UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CharacterTagID].WeaponMeshSocketName);
 	WeaponMesh->SetCollisionProfileName(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->CollisionsData.WeaponCollisionProfileName);
@@ -88,5 +93,15 @@ FOnDeath& ACharacterBase::GetOnDeathDelegate()
 UDecalComponent* ACharacterBase::GetDecalComponent()
 {
 	return nullptr;
+}
+
+bool ACharacterBase::IsWidgetComponentValid()
+{
+	if (WidgetComponent->GetUserWidgetObject() != nullptr)
+	{
+		Cast<IProgressBarInterface>(WidgetComponent->GetUserWidgetObject())->SetActorName(GetName());
+		return true;
+	}
+	return false;
 }
 

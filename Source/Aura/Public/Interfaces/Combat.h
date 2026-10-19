@@ -7,6 +7,7 @@
 #include "UObject/Interface.h"
 #include "Combat.generated.h"
 
+class UWidgetComponent;
 class UCapsuleComponent;
 class USphereComponent;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnDeath,AActor*)
@@ -37,4 +38,5 @@ public:
 	virtual FGameplayTag GetCharacterID() = 0;
 	virtual FOnDeath& GetOnDeathDelegate() = 0;
 	virtual UDecalComponent* GetDecalComponent() = 0;
+	virtual bool IsWidgetComponentValid() = 0;
 };

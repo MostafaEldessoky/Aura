@@ -4,6 +4,7 @@
 #include "Characters/Player/AuraPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/DecalComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PlayerState/AuraState.h"
 #include "Statics/AuraFunctionLibrary.h"
@@ -25,6 +26,8 @@ AAuraPlayer::AAuraPlayer()
 void AAuraPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+	if (IsLocallyControlled())
+		WidgetComponent->SetVisibility(false);
 	UAuraFunctionLibrary::TickFuncUntil(this,[this](){return Cast<AAuraState>(GetPlayerState()) != nullptr;},[this]()
 	{
 		AbilitySystemComponent = Cast<AAuraState>(GetPlayerState())->GetAbilitySystemComponent();

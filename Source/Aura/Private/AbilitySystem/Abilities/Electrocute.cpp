@@ -62,7 +62,7 @@ void UElectrocute::OnGameplayEventReceivedFromAnimNotify(FGameplayEventData Payl
 void UElectrocute::OnApplyingElectrocute()
 {
 	TArray<TWeakObjectPtr<AActor>> TargetActor;
-	TargetActor.Init(nullptr,NumberOfTargets);
+	TargetActor.Init(nullptr,GetAbilityLevel());
 	FHitResult OutHitResult;
 	UKismetSystemLibrary::SphereTraceSingle(
 		this,
@@ -81,7 +81,7 @@ void UElectrocute::OnApplyingElectrocute()
 		UAuraFunctionLibrary::ApplyEffectToTarget(GetAvatarActorFromActorInfo(),TargetActor[0].Get(),OutHitResult.ImpactPoint,DamageEffectTag,GetAssetTags().First(),GetAbilityLevel());
 		TArray<AActor*> Roots;
 		Roots.Add(GetAvatarActorFromActorInfo());
-		for (int32 i = 0; i < NumberOfTargets - 1; i++)
+		for (int32 i = 0; i < GetAbilityLevel() - 1; i++)
 		{
 			Roots.Add(TargetActor[i].Get());
 			TargetActor[i+1] = UAuraFunctionLibrary::GetNearestLineOfSightActorWithInRadius(
