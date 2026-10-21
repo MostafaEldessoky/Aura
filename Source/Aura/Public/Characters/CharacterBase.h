@@ -33,6 +33,7 @@ public:
 	virtual FOnDeath& GetOnDeathDelegate() override;
 	virtual UDecalComponent* GetDecalComponent() override;
 	virtual bool IsWidgetComponentValid() override;
+	virtual UWidgetComponent* GetWidgetComponent() override;
 protected:
 	UPROPERTY(VisibleAnywhere,Category="CPPVars")
 	USkeletalMeshComponent* WeaponMesh;

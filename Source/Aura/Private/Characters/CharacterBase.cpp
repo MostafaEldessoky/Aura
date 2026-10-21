@@ -105,3 +105,8 @@ bool ACharacterBase::IsWidgetComponentValid()
 	return false;
 }
 
+UWidgetComponent* ACharacterBase::GetWidgetComponent()
+{
+	return WidgetComponent;
+}
+

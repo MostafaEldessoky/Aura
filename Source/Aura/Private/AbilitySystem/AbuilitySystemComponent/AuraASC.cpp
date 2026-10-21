@@ -54,6 +54,7 @@ void UAuraASC::BeginPlay()
 			PlayerLevelUpAbility();
 			PlayerChangeAbilityInputBinding();
 			IsUIReadyForPlayerInitializeStartupAttributes();
+			IsUIReadyForSSimulatedPlayersToInitializeStartupAttributes();
 		});
 	else // Enemy Pawn
 		UAuraFunctionLibrary::TickFuncUntil(this,[this](){return GetOwner() != nullptr;},
@@ -66,6 +67,7 @@ void UAuraASC::BeginPlay()
 			BroadcastAttributeChangeForWidgetComp();
 			OnDeath();
 			IsUIReadyForEnemyInitializeStartupAttributes();
+			
 		});
 }
 void UAuraASC::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
@@ -121,6 +123,20 @@ void UAuraASC::IsUIReadyForPlayerInitializeStartupAttributes()
 		},[this]()
 		{
 			Server_PlayerInitializeStartupAttributes();
+		});
+}
+void UAuraASC::IsUIReadyForSSimulatedPlayersToInitializeStartupAttributes() const
+{
+	if (!Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
+		UAuraFunctionLibrary::TickFuncUntil(this,[this]()
+		{
+			return UAuraAttributes::GetHealthAttribute().GetNumericValue(AuraAttributes.Get()) != 0 && UAuraAttributes::GetManaAttribute().GetNumericValue(AuraAttributes.Get()) != 0;
+		},[this]()
+		{
+			UAuraSubSystem::GetAuraSubSystem(this)->OnAttributeChangedForWidgetComp.Broadcast(GetAvatarActor()->GetName(),UAuraAttributes::GetMaxHealthAttribute().GetName(),UAuraAttributes::GetMaxHealthAttribute().GetNumericValue(AuraAttributes.Get()));
+			UAuraSubSystem::GetAuraSubSystem(this)->OnAttributeChangedForWidgetComp.Broadcast(GetAvatarActor()->GetName(),UAuraAttributes::GetMaxManaAttribute().GetName(),UAuraAttributes::GetMaxManaAttribute().GetNumericValue(AuraAttributes.Get()));
+			UAuraSubSystem::GetAuraSubSystem(this)->OnAttributeChangedForWidgetComp.Broadcast(GetAvatarActor()->GetName(),UAuraAttributes::GetHealthAttribute().GetName(),UAuraAttributes::GetHealthAttribute().GetNumericValue(AuraAttributes.Get()));
+			UAuraSubSystem::GetAuraSubSystem(this)->OnAttributeChangedForWidgetComp.Broadcast(GetAvatarActor()->GetName(),UAuraAttributes::GetManaAttribute().GetName(),UAuraAttributes::GetManaAttribute().GetNumericValue(AuraAttributes.Get()));
 		});
 }
 void UAuraASC::IsUIReadyForEnemyInitializeStartupAttributes()
@@ -189,7 +205,7 @@ void UAuraASC::Server_AbilityLevelUp_Implementation(const FGameplayTag& AbilityT
 }
 void UAuraASC::Server_PlayerInitializeStartupAttributes_Implementation()
 {
-	PlayerInitializeStartupAttributes();
+	PlayerInitializeStartupAttributes(); 
 }
 void UAuraASC::InitializeAbilities(TArray<FGameplayTag> AbilitiesTags)
 {

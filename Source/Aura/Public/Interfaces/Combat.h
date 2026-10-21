@@ -39,4 +39,5 @@ public:
 	virtual FOnDeath& GetOnDeathDelegate() = 0;
 	virtual UDecalComponent* GetDecalComponent() = 0;
 	virtual bool IsWidgetComponentValid() = 0;
+	virtual UWidgetComponent* GetWidgetComponent() = 0;
 };

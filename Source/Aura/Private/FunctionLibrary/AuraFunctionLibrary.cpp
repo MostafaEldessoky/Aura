@@ -233,11 +233,10 @@ AActor* UAuraFunctionLibrary::SpawnProjectile(AActor* Instigator,AActor* Target,
 		SpawnedActor->ProjectileMovementComponent->bRotationFollowsVelocity = true;
 		SpawnedActor->ProjectileMovementComponent->HomingAccelerationMagnitude = 2000.f;
 		SpawnedActor->ProjectileMovementComponent->HomingTargetComponent = Target->GetRootComponent();
-		if (Cast<ICombat>(Target))
-			Cast<ICombat>(Target)->GetOnDeathDelegate().AddLambda([SpawnedActor](AActor*)
-			{
-				SpawnedActor->ProjectileMovementComponent->HomingTargetComponent = nullptr;
-			});
+		Cast<ICombat>(Target)->GetOnDeathDelegate().AddLambda([SpawnedActor](AActor*)
+		{
+			SpawnedActor->ProjectileMovementComponent->HomingTargetComponent = nullptr;
+		});
 	}
 	SpawnedActor->FinishSpawning(CombatCharacter->GetWeaponMechanicSocketTransform());
 	return SpawnedActor;

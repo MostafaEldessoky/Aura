@@ -33,6 +33,7 @@ private:
 	void PlayerLevelUpAbility();
 	void PlayerChangeAbilityInputBinding();
 	void IsUIReadyForPlayerInitializeStartupAttributes();
+	void IsUIReadyForSSimulatedPlayersToInitializeStartupAttributes() const;
 	void IsUIReadyForEnemyInitializeStartupAttributes();
 	void InitializeAbilities(TArray<FGameplayTag> AbilitiesTags);
 	void PlayerBroadcastAttributeChange();
@@ -43,6 +44,5 @@ private:
 	void OnDeath() const;
 	void PlayerInputs();
 	TWeakObjectPtr<UAuraAttributes> AuraAttributes;
-	FTimerHandle InitializeStartupAttributesTimerHandle;
 	TScriptInterface<ICombat> CombatCharacter;
 };
