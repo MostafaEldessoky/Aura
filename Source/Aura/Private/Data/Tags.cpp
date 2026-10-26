@@ -37,6 +37,7 @@ namespace Aura
 		UE_DEFINE_GAMEPLAY_TAG(HealUp,"Aura.Effects.HealUp")
 		UE_DEFINE_GAMEPLAY_TAG(ManaUp,"Aura.Effects.ManaUp")
 		UE_DEFINE_GAMEPLAY_TAG(StopMove,"Aura.Effects.StopMove")
+		UE_DEFINE_GAMEPLAY_TAG(CosumeXP,"Aura.Effects.CosumeXP")
 	}
 	namespace Cooldown
 	{
@@ -84,6 +85,8 @@ namespace Aura
 	}
 	namespace UI
 	{
+		UE_DEFINE_GAMEPLAY_TAG(ToggleAttributeWidgets,"Aura.UI.ToggleAttributeWidgets")
+		UE_DEFINE_GAMEPLAY_TAG(ToggleSpellTreeWidgets,"Aura.UI.ToggleSpellTreeWidgets")
 		UE_DEFINE_GAMEPLAY_TAG(PickUp,"Aura.UI.PickUp")
 	}
 	namespace InputMappingContexts
@@ -92,6 +95,7 @@ namespace Aura
 	}
 	namespace InputActions
 	{
+		UE_DEFINE_GAMEPLAY_TAG(InputActions,"Aura.InputActions")
 		UE_DEFINE_GAMEPLAY_TAG(RMB,"Aura.InputActions.RMB")
 		UE_DEFINE_GAMEPLAY_TAG(LMB,"Aura.InputActions.LMB")
 		UE_DEFINE_GAMEPLAY_TAG(SB1,"Aura.InputActions.SB1")

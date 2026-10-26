@@ -27,6 +27,7 @@ public class Aura : ModuleRules
 			"GameplayStateTreeModule",
 			"NavigationSystem",
 			"Niagara",
+			"StructUtilsEditor"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

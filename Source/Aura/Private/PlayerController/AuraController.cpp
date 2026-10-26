@@ -37,7 +37,15 @@ void AAuraController::SetupInputComponent()
 	for (const auto& temp : UAuraSubSystem::GetAuraSubSystem(this)->AuraData->InputData.InputActions)
 		ESC->BindActionValueLambda(temp.Value,ETriggerEvent::Started,[this,temp](const FInputActionValue& Value)
 		{
-			if (temp.Key.MatchesTagExact(Aura::InputActions::RMB))
+			if (temp.Key.MatchesTagExact(Aura::UI::ToggleAttributeWidgets))
+			{
+				UAuraSubSystem::GetAuraSubSystem(this)->OnToggleAttributeWidget.Broadcast();
+			}
+			else if (temp.Key.MatchesTagExact(Aura::UI::ToggleSpellTreeWidgets))
+			{
+				UAuraSubSystem::GetAuraSubSystem(this)->OnToggleSpellTreeWidget.Broadcast();
+			}
+			else if (temp.Key.MatchesTagExact(Aura::InputActions::RMB))
 				UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetPawn(),temp.Key,FGameplayEventData());
 			else 
 				UAuraSubSystem::GetAuraSubSystem(this)->OnInputPressed.Broadcast(temp.Key);

@@ -1,3 +1,2 @@
-1- UI Complete and Inventory
-2- save game system & Online Game Modes 
-3- work on enemy behaviors and AI behavior tree & state tree
+1- SaveGame 
+3- AI in GAS SYSTEM

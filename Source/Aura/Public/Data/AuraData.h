@@ -10,6 +10,7 @@
 #include "GameplayEffect.h"
 #include "AuraData.generated.h"
 
+class UImage;
 class UBehaviorTree;
 class AAuraEnemyBase;
 class UNiagaraSystem;
@@ -124,6 +125,20 @@ USTRUCT(BlueprintType) struct FAbilitiesData
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FBuffData> BuffsToApply;
 };
+USTRUCT(BlueprintType) struct FUIAbilitiesData
+{
+	GENERATED_BODY()
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer RequiresTagsToUnlock;
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag CooldownTag;
+	UPROPERTY(EditDefaultsOnly)
+	 FProgressBarStyle LockedImage;
+	UPROPERTY(EditDefaultsOnly)
+	 FProgressBarStyle UnlockedImage;
+	UPROPERTY(EditDefaultsOnly)
+	 FProgressBarStyle AbilityImage;
+};
 UCLASS(Blueprintable)
 class AURA_API UAuraData : public UDataAsset
 {
@@ -146,7 +161,5 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FGameplayTag,TSubclassOf<AProjectile>> ProjectilesClasses;
 	UPROPERTY(EditDefaultsOnly)
-	TMap<FGameplayTag,int32> OnApplyEffectsToTargetOrder;
-	UPROPERTY(EditDefaultsOnly)
-	TMap<FGameplayTag,int32> OnApplyEffectsToSelfOrder;
+	TMap<FGameplayTag,FUIAbilitiesData> UIAbilitiesData;
 };

@@ -14,5 +14,5 @@ void UBottonWidget::NativeOnInitialized()
 
 void UBottonWidget::LevelUp()
 {
-	UAuraSubSystem::GetAuraSubSystem(this)->OnNeedLevelUpAttribute.Broadcast(Attribute);
+	UAuraSubSystem::GetAuraSubSystem(this)->OnNeedLevelUpAttribute.Broadcast(Attribute.GetName());
 }

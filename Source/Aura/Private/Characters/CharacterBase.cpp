@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Statics/AuraSubSystem.h"
 #include "MotionWarpingComponent.h"
+#include "Blueprint/WidgetTree.h"
 #include "Components/WidgetComponent.h"
 #include "Interfaces/ProgressBarInterface.h"
 
@@ -29,7 +30,13 @@ ACharacterBase::ACharacterBase()
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	Cast<IProgressBarInterface>(WidgetComponent->GetUserWidgetObject())->SetActorName(GetName());
+	
+	TArray<UWidget*> Widgets;
+	WidgetComponent->GetUserWidgetObject()->WidgetTree.Get()->GetAllWidgets(Widgets);
+	for (const auto& temp : Widgets)
+		if (temp->Implements<UProgressBarInterface>())
+			Cast<IProgressBarInterface>(temp)->SetActorName(GetName());
+	
 	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
 	WeaponMesh->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale,UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CharacterTagID].WeaponMeshSocketName);
 	WeaponMesh->SetCollisionProfileName(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->CollisionsData.WeaponCollisionProfileName);
@@ -99,7 +106,11 @@ bool ACharacterBase::IsWidgetComponentValid()
 {
 	if (WidgetComponent->GetUserWidgetObject() != nullptr)
 	{
-		Cast<IProgressBarInterface>(WidgetComponent->GetUserWidgetObject())->SetActorName(GetName());
+		TArray<UWidget*> Widgets;
+		WidgetComponent->GetUserWidgetObject()->WidgetTree.Get()->GetAllWidgets(Widgets);
+		for (const auto& temp : Widgets)
+			if (temp->Implements<UProgressBarInterface>())
+				Cast<IProgressBarInterface>(temp)->SetActorName(GetName());
 		return true;
 	}
 	return false;

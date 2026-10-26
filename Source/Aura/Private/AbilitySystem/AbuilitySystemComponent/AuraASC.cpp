@@ -45,7 +45,6 @@ void UAuraASC::BeginPlay()
 			SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 			InitAbilityActorInfo(GetOwner(),Cast<APlayerState>(GetOwner())->GetPawn());
 			CombatCharacter = GetAvatarActor();
-			InitializeAbilities(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CombatCharacter->GetCharacterID()].StartUpAbilities);
 			PlayerBroadcastAttributeChange();
 			PlayerLevelUp();
 			PlayerInputs();
@@ -67,7 +66,6 @@ void UAuraASC::BeginPlay()
 			BroadcastAttributeChangeForWidgetComp();
 			OnDeath();
 			IsUIReadyForEnemyInitializeStartupAttributes();
-			
 		});
 }
 void UAuraASC::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
@@ -75,9 +73,14 @@ void UAuraASC::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
 	Super::OnGiveAbility(AbilitySpec);
 	if (!Cast<APlayerState>(GetOwner())) 
 		return;
-	for (const auto& temp : AbilitySpec.Ability.Get()->GetAssetTags())
-		if (temp.MatchesTag(Aura::Abilities::Abilities))
-			UAuraSubSystem::GetAuraSubSystem(this)->OnGiveAbility.Broadcast(temp);
+	UAuraSubSystem::GetAuraSubSystem(this)->OnGiveAbility.Broadcast(AbilitySpec.Ability.Get()->GetAssetTags());
+	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
+	{
+		if (AbilitySpec.Ability->GetAssetTags().HasTagExact(Aura::Abilities::TraceUnderMouse))
+			TryActivateAbilitiesByTag(Aura::Abilities::TraceUnderMouse.GetTag().GetSingleTagContainer());
+		if (AbilitySpec.Ability->GetAssetTags().HasTagExact(Aura::Abilities::HighLight))
+			TryActivateAbilitiesByTag(Aura::Abilities::HighLight.GetTag().GetSingleTagContainer());
+	}
 }
 void UAuraASC::Client_BroadCastPickUpItem_Implementation(const FGameplayTagContainer& TagContainer)
 {
@@ -88,6 +91,7 @@ void UAuraASC::PlayerUnlockAbility()
 	UAuraSubSystem::GetAuraSubSystem(this)->OnUnlockAbility.AddLambda([this](FGameplayTag AbilityTag)
 	{
 		GiveAbility(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->AbilitiesClasses[AbilityTag].AbilityClass);
+		ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[Aura::Effects::CosumeXP],1,MakeEffectContext()).Data.Get());
 	});
 }
 void UAuraASC::PlayerLevelUpAbility()
@@ -131,7 +135,7 @@ void UAuraASC::IsUIReadyForSSimulatedPlayersToInitializeStartupAttributes() cons
 		UAuraFunctionLibrary::TickFuncUntil(this,[this]()
 		{
 			return UAuraAttributes::GetHealthAttribute().GetNumericValue(AuraAttributes.Get()) != 0 && UAuraAttributes::GetManaAttribute().GetNumericValue(AuraAttributes.Get()) != 0;
-		},[this]()
+		},[this]() 
 		{
 			UAuraSubSystem::GetAuraSubSystem(this)->OnAttributeChangedForWidgetComp.Broadcast(GetAvatarActor()->GetName(),UAuraAttributes::GetMaxHealthAttribute().GetName(),UAuraAttributes::GetMaxHealthAttribute().GetNumericValue(AuraAttributes.Get()));
 			UAuraSubSystem::GetAuraSubSystem(this)->OnAttributeChangedForWidgetComp.Broadcast(GetAvatarActor()->GetName(),UAuraAttributes::GetMaxManaAttribute().GetName(),UAuraAttributes::GetMaxManaAttribute().GetNumericValue(AuraAttributes.Get()));
@@ -168,8 +172,10 @@ void UAuraASC::Server_ApplyLevelUpEffect_Implementation(const FString& Attribute
 	const auto InputTag = UAuraFunctionLibrary::MakeAttributeTagFromName(AttributeName);
 	auto temp = Cast<IAttributeInterface>(GetAvatarActor())->GetAuraAttributes();
 	if (temp->GetXP() >= temp->GetMaxXP())
-		ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[InputTag],
-			1,MakeEffectContext()).Data.Get());
+	{
+		ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[Aura::Effects::CosumeXP],1,MakeEffectContext()).Data.Get());
+		ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[InputTag],1,MakeEffectContext()).Data.Get());
+	}
 }
 void UAuraASC::PlayerInitializeStartupAttributes()
 {
@@ -201,11 +207,13 @@ void UAuraASC::Server_AbilityLevelUp_Implementation(const FGameplayTag& AbilityT
 		GetActivatableGameplayAbilitySpecsByAllMatchingTags(AbilityTag.GetSingleTagContainer(),MatchingGameplayAbilities);
 		MatchingGameplayAbilities[0]->Level++;
 		MarkAbilitySpecDirty(*MatchingGameplayAbilities[0]);
+		ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[Aura::Effects::CosumeXP],1,MakeEffectContext()).Data.Get());
 	}
 }
 void UAuraASC::Server_PlayerInitializeStartupAttributes_Implementation()
 {
 	PlayerInitializeStartupAttributes(); 
+	InitializeAbilities(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CombatCharacter->GetCharacterID()].StartUpAbilities);
 }
 void UAuraASC::InitializeAbilities(TArray<FGameplayTag> AbilitiesTags)
 {
@@ -213,11 +221,6 @@ void UAuraASC::InitializeAbilities(TArray<FGameplayTag> AbilitiesTags)
 	{
 		for (const auto& temp : AbilitiesTags)
 			GiveAbility(FGameplayAbilitySpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->AbilitiesClasses[temp].AbilityClass));
-	}
-	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
-	{
-		TryActivateAbilitiesByTag(Aura::Abilities::TraceUnderMouse.GetTag().GetSingleTagContainer());
-		TryActivateAbilitiesByTag(Aura::Abilities::HighLight.GetTag().GetSingleTagContainer());
 	}
 }
 void UAuraASC::OnDeath() const

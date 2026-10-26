@@ -39,6 +39,7 @@ namespace Aura
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(HealUp)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(ManaUp)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(StopMove)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(CosumeXP)
 	}
 	namespace Cooldown
 	{
@@ -85,6 +86,8 @@ namespace Aura
 	}
 	namespace UI
 	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(ToggleAttributeWidgets)
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(ToggleSpellTreeWidgets)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(PickUp)
 	}
 	namespace InputMappingContexts
@@ -93,6 +96,7 @@ namespace Aura
 	}
 	namespace InputActions
 	{
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputActions)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(RMB)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(LMB)
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(SB1)

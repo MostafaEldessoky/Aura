@@ -16,7 +16,6 @@ void UFireBall::ActivateAbility(const FGameplayAbilitySpecHandle Handle,const FG
                                 const FGameplayAbilityActivationInfo ActivationInfo,const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 	CombatInterface = GetAvatarActorFromActorInfo();
 	auto WaitGameplayEventTraceUnderMouse = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,Aura::Abilities::TraceUnderMouse);
 	WaitGameplayEventTraceUnderMouse->EventReceived.AddDynamic(this,&UFireBall::TraceUnderMouse);
@@ -59,6 +58,7 @@ void UFireBall::OnGameplayEventReceivedFromAnimNotify(FGameplayEventData Payload
 			UAuraFunctionLibrary::SpawnProjectile(GetAvatarActorFromActorInfo(),TargetActor,temp,ProjectileID,5.f,false,false,GetAssetTags().First(),GetAbilityLevel());
 		}
 	}
+	CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 	EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,false,false);
 }
 

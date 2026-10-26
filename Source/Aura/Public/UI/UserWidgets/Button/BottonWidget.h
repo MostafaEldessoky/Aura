@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AttributeSet.h"
 #include "Blueprint/UserWidget.h"
 #include "BottonWidget.generated.h"
 
@@ -15,10 +16,10 @@ class AURA_API UBottonWidget : public UUserWidget
 protected:
 	virtual void NativeOnInitialized() override;
 private:
+	UPROPERTY(EditAnywhere,Category=CPPVars)
+	FGameplayAttribute Attribute;
 	UPROPERTY(meta=(BindWidget))
 	UButton* Button;
-	UPROPERTY(EditDefaultsOnly,Category=CPPVars)
-	FString Attribute;
 	UFUNCTION()
 	void LevelUp();
 };
