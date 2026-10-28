@@ -1,2 +1,4 @@
 1- SaveGame 
 3- AI in GAS SYSTEM
+
+Dynamic Ability Tags needed to avoid change ability tags it self that case all running instanced change even on server clint model

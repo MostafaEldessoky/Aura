@@ -71,52 +71,64 @@ void UAuraASC::BeginPlay()
 void UAuraASC::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
 {
 	Super::OnGiveAbility(AbilitySpec);
-	if (!Cast<APlayerState>(GetOwner())) 
+	if (!Cast<APlayerState>(GetOwner()) || !Cast<APawn>(GetAvatarActor())->IsLocallyControlled()) 
 		return;
+	
+	UE_LOG(LogTemp,Warning,TEXT("%s : %d"),*Cast<APlayerState>(GetOwner())->GetName(),Cast<APawn>(GetAvatarActor())->HasAuthority());
+	
 	UAuraSubSystem::GetAuraSubSystem(this)->OnGiveAbility.Broadcast(AbilitySpec.Ability.Get()->GetAssetTags());
-	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
-	{
-		if (AbilitySpec.Ability->GetAssetTags().HasTagExact(Aura::Abilities::TraceUnderMouse))
-			TryActivateAbilitiesByTag(Aura::Abilities::TraceUnderMouse.GetTag().GetSingleTagContainer());
-		if (AbilitySpec.Ability->GetAssetTags().HasTagExact(Aura::Abilities::HighLight))
-			TryActivateAbilitiesByTag(Aura::Abilities::HighLight.GetTag().GetSingleTagContainer());
-	}
+	
+	if (AbilitySpec.Ability->GetAssetTags().HasTagExact(Aura::Abilities::TraceUnderMouse))
+		TryActivateAbilitiesByTag(Aura::Abilities::TraceUnderMouse.GetTag().GetSingleTagContainer());
+	if (AbilitySpec.Ability->GetAssetTags().HasTagExact(Aura::Abilities::HighLight))
+		TryActivateAbilitiesByTag(Aura::Abilities::HighLight.GetTag().GetSingleTagContainer());
 }
 void UAuraASC::Client_BroadCastPickUpItem_Implementation(const FGameplayTagContainer& TagContainer)
 {
 	UAuraSubSystem::GetAuraSubSystem(this)->OnPickedUpEffectItem.Broadcast(TagContainer);
 }
+void UAuraASC::Server_PlayerChangeAbilityInputBinding_Implementation(FGameplayTagContainer AbilityToInputTags)
+{
+	for (const auto& AbilityToInputTag : AbilityToInputTags)
+		if (AbilityToInputTag.MatchesTag(Aura::Abilities::Abilities))
+		{
+			TArray<FGameplayAbilitySpec*> OutAbilitySpecs;
+			GetActivatableGameplayAbilitySpecsByAllMatchingTags(AbilityToInputTag.GetSingleTagContainer(),OutAbilitySpecs);
+			const_cast<FGameplayTagContainer&>(OutAbilitySpecs[0]->Ability.Get()->GetAssetTags()).Reset();
+			for (const auto& temp : AbilityToInputTags)
+				const_cast<FGameplayTagContainer&>(OutAbilitySpecs[0]->Ability.Get()->GetAssetTags()).AddTag(temp);
+			MarkAbilitySpecDirty(*OutAbilitySpecs[0]);
+			break;
+		}
+}
 void UAuraASC::PlayerUnlockAbility()
 {
+	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
 	UAuraSubSystem::GetAuraSubSystem(this)->OnUnlockAbility.AddLambda([this](FGameplayTag AbilityTag)
 	{
-		GiveAbility(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->AbilitiesClasses[AbilityTag].AbilityClass);
-		ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[Aura::Effects::CosumeXP],1,MakeEffectContext()).Data.Get());
+		Server_PlayerUnlockAbility(AbilityTag);
 	});
+}
+void UAuraASC::Server_PlayerUnlockAbility_Implementation(FGameplayTag AbilityTag)
+{
+	GiveAbility(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->AbilitiesClasses[AbilityTag].AbilityClass);
+	ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[Aura::Effects::CosumeXP],1,MakeEffectContext()).Data.Get());
 }
 void UAuraASC::PlayerLevelUpAbility()
 {
-	UAuraSubSystem::GetAuraSubSystem(this)->OnNeedLevelUpAbility.AddLambda([this](FGameplayTag AbilityTag)
-	{
-		Server_AbilityLevelUp(AbilityTag);
-	});
+	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
+		UAuraSubSystem::GetAuraSubSystem(this)->OnNeedLevelUpAbility.AddLambda([this](FGameplayTag AbilityTag)
+		{
+			Server_AbilityLevelUp(AbilityTag);
+		});
 }
 void UAuraASC::PlayerChangeAbilityInputBinding()
 {
-	UAuraSubSystem::GetAuraSubSystem(this)->OnAssignAbilityToInput.AddLambda([this](FGameplayTagContainer AbilityToInputTags)
-	{
-		for (const auto& AbilityToInputTag : AbilityToInputTags)
-			if (AbilityToInputTag.MatchesTag(Aura::Abilities::Abilities))
-			{
-				TArray<FGameplayAbilitySpec*> OutAbilitySpecs;
-				GetActivatableGameplayAbilitySpecsByAllMatchingTags(AbilityToInputTag.GetSingleTagContainer(),OutAbilitySpecs);
-				const_cast<FGameplayTagContainer&>(OutAbilitySpecs[0]->Ability.Get()->GetAssetTags()).Reset();
-				for (const auto& temp : AbilityToInputTags)
-					const_cast<FGameplayTagContainer&>(OutAbilitySpecs[0]->Ability.Get()->GetAssetTags()).AddTag(temp);
-				MarkAbilitySpecDirty(*OutAbilitySpecs[0]);
-				break;
-			}
-	});
+	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
+		UAuraSubSystem::GetAuraSubSystem(this)->OnAssignAbilityToInput.AddLambda([this](FGameplayTagContainer AbilityToInputTags)
+		{
+			Server_PlayerChangeAbilityInputBinding(AbilityToInputTags);
+		});
 }
 void UAuraASC::IsUIReadyForPlayerInitializeStartupAttributes()
 {
