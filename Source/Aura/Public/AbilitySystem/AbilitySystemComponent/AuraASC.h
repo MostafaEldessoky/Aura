@@ -29,6 +29,10 @@ private:
 	void Server_AbilityLevelUp(const FGameplayTag& AbilityTag);
 	UFUNCTION(Server, Reliable)
 	void Server_PlayerInitializeStartupAttributes();
+	UFUNCTION(Server, Reliable)
+	void Server_PlayerUnlockAbility(FGameplayTag AbilityTag);
+	UFUNCTION(Server, Reliable)
+	void Server_PlayerChangeAbilityInputBinding(FGameplayTagContainer AbilityToInputTags);
 	void PlayerUnlockAbility();
 	void PlayerLevelUpAbility();
 	void PlayerChangeAbilityInputBinding();

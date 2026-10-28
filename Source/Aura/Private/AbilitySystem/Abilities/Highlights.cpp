@@ -22,22 +22,32 @@ void UHighlights::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 }
 void UHighlights::OnRMBPressed(FGameplayEventData Payload)
 {
-	if (CurrentTarget)
+	if (IsValid(CurrentTarget.GetObject()))
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActorFromActorInfo(),Aura::Abilities::FireBall,Payload);
 	else
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActorFromActorInfo(),Aura::Abilities::MoveTo,Payload);
 }
 void UHighlights::TraceUnderMouse(FGameplayEventData Payload)
 {
-	CurrentTarget = Payload.TargetData.Get(0)->GetHitResult()->GetActor();
-	if (CurrentTarget)
+	AActor* HitActor = nullptr;
+	if (Payload.TargetData.Num() > 0 && Payload.TargetData.Get(0) && Payload.TargetData.Get(0)->GetHitResult())
 	{
-		CurrentTarget->Highlight();
-		LastTarget = CurrentTarget;
-		if (LastTarget && LastTarget != CurrentTarget)
-			LastTarget->UnHighlight();
+		HitActor = Payload.TargetData.Get(0)->GetHitResult()->GetActor();
 	}
-	else if (LastTarget)
-		LastTarget->UnHighlight();
+
+	CurrentTarget = (HitActor && HitActor->Implements<UCombat>()) ? HitActor : nullptr;
+
+	if (CurrentTarget != LastTarget)
+	{
+		if (IsValid(LastTarget.GetObject()))
+		{
+			LastTarget->UnHighlight();
+		}
+		if (IsValid(CurrentTarget.GetObject()))
+		{
+			CurrentTarget->Highlight();
+		}
+		LastTarget = CurrentTarget;
+	}
 }
 
