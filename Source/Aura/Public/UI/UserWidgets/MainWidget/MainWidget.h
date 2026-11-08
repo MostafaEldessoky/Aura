@@ -23,4 +23,7 @@ private:
 	UPROPERTY(Meta = (BindWidget))
 	UUserWidget* SpellTreeWidget;
 	bool bIsSpellTreeWidgetVisible{false};
+	UPROPERTY(Meta = (BindWidget))
+	UUserWidget* InGameMenuWidget;
+	bool bIsInGameMenuWidgetVisible{false};
 };

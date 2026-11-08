@@ -23,7 +23,7 @@ void UHighlights::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 void UHighlights::OnRMBPressed(FGameplayEventData Payload)
 {
 	if (IsValid(CurrentTarget.GetObject()))
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActorFromActorInfo(),Aura::Abilities::FireBall,Payload);
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActorFromActorInfo(),Aura::Abilities::Attack::FireBall,Payload);
 	else
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActorFromActorInfo(),Aura::Abilities::MoveTo,Payload);
 }

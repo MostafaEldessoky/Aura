@@ -110,6 +110,7 @@ void UElectrocute::OnApplyingElectrocute()
 		bCueActivated = false;
 		bOneTrace = false;
 		UGameplayCueFunctionLibrary::RemoveGameplayCueOnActor(GetAvatarActorFromActorInfo(),CueTag,FGameplayCueParameters());
+		CommitAbilityCooldown(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true);
 		EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,false,false);
 		return;
 	}

@@ -54,6 +54,7 @@ void UAuraASC::BeginPlay()
 			PlayerChangeAbilityInputBinding();
 			IsUIReadyForPlayerInitializeStartupAttributes();
 			IsUIReadyForSSimulatedPlayersToInitializeStartupAttributes();
+			PlayerSaveGame();
 		});
 	else // Enemy Pawn
 		UAuraFunctionLibrary::TickFuncUntil(this,[this](){return GetOwner() != nullptr;},
@@ -74,10 +75,16 @@ void UAuraASC::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
 	if (!Cast<APlayerState>(GetOwner()) || !Cast<APawn>(GetAvatarActor())->IsLocallyControlled()) 
 		return;
 	
-	UE_LOG(LogTemp,Warning,TEXT("%s : %d"),*Cast<APlayerState>(GetOwner())->GetName(),Cast<APawn>(GetAvatarActor())->HasAuthority());
-	
-	UAuraSubSystem::GetAuraSubSystem(this)->OnGiveAbility.Broadcast(AbilitySpec.Ability.Get()->GetAssetTags());
-	
+	if (AbilitySpec.Ability.Get()->GetAssetTags().First().MatchesTag(Aura::Abilities::Attack::Attack))
+	{
+		auto temp = UAuraSubSystem::GetAuraSubSystem(this)->AuraData->AbilitiesClasses[AbilitySpec.Ability.Get()->GetAssetTags().First()].AbilityInputTag;
+		if (temp.IsValid()) AbilityInputBindings.Add(AbilitySpec.Ability.Get()->GetAssetTags().First(),temp);
+		FGameplayTagContainer Container;
+		Container.AddTag(AbilitySpec.Ability.Get()->GetAssetTags().First());
+		auto temp1 = AbilityInputBindings.Find(AbilitySpec.Ability.Get()->GetAssetTags().First());
+		if (temp1) Container.AddTag(*temp1);
+		UAuraSubSystem::GetAuraSubSystem(this)->OnGiveAbility.Broadcast(Container);
+	}
 	if (AbilitySpec.Ability->GetAssetTags().HasTagExact(Aura::Abilities::TraceUnderMouse))
 		TryActivateAbilitiesByTag(Aura::Abilities::TraceUnderMouse.GetTag().GetSingleTagContainer());
 	if (AbilitySpec.Ability->GetAssetTags().HasTagExact(Aura::Abilities::HighLight))
@@ -87,20 +94,77 @@ void UAuraASC::Client_BroadCastPickUpItem_Implementation(const FGameplayTagConta
 {
 	UAuraSubSystem::GetAuraSubSystem(this)->OnPickedUpEffectItem.Broadcast(TagContainer);
 }
-void UAuraASC::Server_PlayerChangeAbilityInputBinding_Implementation(FGameplayTagContainer AbilityToInputTags)
+void UAuraASC::PlayerSaveGame()
 {
-	for (const auto& AbilityToInputTag : AbilityToInputTags)
-		if (AbilityToInputTag.MatchesTag(Aura::Abilities::Abilities))
+	if (GetNetMode() == ENetMode::NM_Standalone )
+		UAuraSubSystem::GetAuraSubSystem(this)->OnSaveGameNeeded.AddLambda([this](TArray<FSaveGameBase>& SaveGameArray)
 		{
-			TArray<FGameplayAbilitySpec*> OutAbilitySpecs;
-			GetActivatableGameplayAbilitySpecsByAllMatchingTags(AbilityToInputTag.GetSingleTagContainer(),OutAbilitySpecs);
-			const_cast<FGameplayTagContainer&>(OutAbilitySpecs[0]->Ability.Get()->GetAssetTags()).Reset();
-			for (const auto& temp : AbilityToInputTags)
-				const_cast<FGameplayTagContainer&>(OutAbilitySpecs[0]->Ability.Get()->GetAssetTags()).AddTag(temp);
-			MarkAbilitySpecDirty(*OutAbilitySpecs[0]);
-			break;
-		}
+			FSaveGameBase PlayerSaveGame;
+			PlayerSaveGame.ID = CombatCharacter->GetCharacterID();
+			PlayerSaveGame.bIsDestroyed = false;
+			PlayerSaveGame.Transform = GetAvatarActor()->GetTransform();
+			PlayerSaveGame.CharacterSaveGame.Health = AuraAttributes->GetHealth();
+			PlayerSaveGame.CharacterSaveGame.Mana = AuraAttributes->GetMana();
+			PlayerSaveGame.PlayerSaveGame.XP = AuraAttributes->GetXP();
+			PlayerSaveGame.PlayerSaveGame.Strength = AuraAttributes->GetStrength();
+			PlayerSaveGame.PlayerSaveGame.Agility = AuraAttributes->GetAgility();
+			PlayerSaveGame.PlayerSaveGame.Intelligence = AuraAttributes->GetIntelligence();
+			for (const auto& temp : GetActivatableAbilities())
+			{
+				if (temp.Ability->GetAssetTags().First().MatchesTag(Aura::Abilities::Attack::Attack))
+				{
+					FAbilitiesSaveGame AbilitiesSaveGame;
+					AbilitiesSaveGame.AbilityTag = temp.Ability->GetAssetTags().First();
+					if (AbilityInputBindings.Contains(temp.Ability->GetAssetTags().First()))
+					{
+						AbilitiesSaveGame.InputTag = *AbilityInputBindings.Find(temp.Ability->GetAssetTags().First());
+					}
+					AbilitiesSaveGame.AbilityLevel = temp.Level;
+					PlayerSaveGame.PlayerSaveGame.AbilitiesSaveGame.Add(AbilitiesSaveGame);
+				}
+			}
+			SaveGameArray.Add(PlayerSaveGame);
+		});
 }
+
+void UAuraASC::PlayerLoadGame()
+{
+	if (GetNetMode() == ENetMode::NM_Standalone && Cast<APlayerState>(GetOwnerActor()) && UAuraSubSystem::GetAuraSubSystem(this)->AuraSaveGame)
+	{
+		TArray<FGameplayAbilitySpecHandle> OutAbilityHandles;
+		GetAllAbilities(OutAbilityHandles);
+		for (auto& SpecHandle : OutAbilityHandles)
+			if (FindAbilitySpecFromHandle(SpecHandle)->Ability->GetAssetTags().HasTag(Aura::Abilities::Attack::Attack))
+			{
+				ClearAbility(SpecHandle);
+				AbilityInputBindings.Empty();
+			}
+		auto SaveGame = UAuraSubSystem::GetAuraSubSystem(this)->AuraSaveGame;
+		for (const auto& temp : SaveGame->ObjectData)
+			if (temp.ID == CombatCharacter->GetCharacterID())
+			{
+				for (const auto& temp1 : temp.PlayerSaveGame.AbilitiesSaveGame)
+				{
+					AbilityInputBindings.Remove(temp1.AbilityTag);
+					auto temp2 = AbilityInputBindings.FindKey(temp1.InputTag);
+					if (temp2) AbilityInputBindings.Remove(*temp2);
+					AbilityInputBindings.Add(temp1.AbilityTag, temp1.InputTag);
+					auto SpecHandle = GiveAbility(FGameplayAbilitySpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->AbilitiesClasses[temp1.AbilityTag].AbilityClass));
+					FindAbilitySpecFromHandle(SpecHandle)->Level = temp1.AbilityLevel;
+					MarkAbilitySpecDirty(*FindAbilitySpecFromHandle(SpecHandle)); // no need for this but *_*
+				}
+				FGameplayEffectSpecHandle Handle = MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[Aura::Effects::LoadSetByCaller],1,MakeEffectContext());
+				UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(Handle,Aura::SetByCaller::Health,temp.CharacterSaveGame.Health - AuraAttributes->GetHealth());
+				UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(Handle,Aura::SetByCaller::Mana,temp.CharacterSaveGame.Mana - AuraAttributes->GetMana());
+				UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(Handle,Aura::SetByCaller::XP,temp.PlayerSaveGame.XP - AuraAttributes->GetXP());
+				UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(Handle,Aura::SetByCaller::Strength,temp.PlayerSaveGame.Strength - AuraAttributes->GetStrength());
+				UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(Handle,Aura::SetByCaller::Agility,temp.PlayerSaveGame.Agility - AuraAttributes->GetAgility());
+				UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(Handle,Aura::SetByCaller::Intelligence,temp.PlayerSaveGame.Intelligence - AuraAttributes->GetIntelligence());
+				ApplyGameplayEffectSpecToSelf(*Handle.Data);
+			}
+	}
+}
+
 void UAuraASC::PlayerUnlockAbility()
 {
 	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
@@ -127,7 +191,20 @@ void UAuraASC::PlayerChangeAbilityInputBinding()
 	if (Cast<APawn>(GetAvatarActor())->IsLocallyControlled())
 		UAuraSubSystem::GetAuraSubSystem(this)->OnAssignAbilityToInput.AddLambda([this](FGameplayTagContainer AbilityToInputTags)
 		{
-			Server_PlayerChangeAbilityInputBinding(AbilityToInputTags);
+			for (const auto& AbilityToInputTag : AbilityToInputTags)
+				if (AbilityToInputTag.MatchesTag(Aura::Abilities::Abilities))
+				{
+					AbilityInputBindings.Remove(AbilityToInputTag);
+					for (const auto& temp : AbilityToInputTags)
+						if (temp.MatchesTag(Aura::InputActions::InputActions))
+						{
+							auto temp1 = AbilityInputBindings.FindKey(temp);
+							if (temp1)
+								AbilityInputBindings.Remove(*temp1);
+							AbilityInputBindings.Add(AbilityToInputTag,temp);
+						}
+					break;
+				}
 		});
 }
 void UAuraASC::IsUIReadyForPlayerInitializeStartupAttributes()
@@ -139,6 +216,7 @@ void UAuraASC::IsUIReadyForPlayerInitializeStartupAttributes()
 		},[this]()
 		{
 			Server_PlayerInitializeStartupAttributes();
+			PlayerLoadGame();
 		});
 }
 void UAuraASC::IsUIReadyForSSimulatedPlayersToInitializeStartupAttributes() const
@@ -206,7 +284,7 @@ void UAuraASC::BroadcastAttributeChangeForWidgetComp()
 }
 void UAuraASC::EnemyInitializeStartupAttributes()
 {
-	if (Cast<APawn>(GetOwner())->HasAuthority()) 
+	if (Cast<APawn>(GetOwner())->HasAuthority())
 		for (const auto& temp : UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CombatCharacter->GetCharacterID()].StartupAttributes)
 			ApplyGameplayEffectSpecToSelf(*MakeOutgoingSpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->EffectsClasses[temp],1,MakeEffectContext()).Data.Get());
 }
@@ -224,16 +302,14 @@ void UAuraASC::Server_AbilityLevelUp_Implementation(const FGameplayTag& AbilityT
 }
 void UAuraASC::Server_PlayerInitializeStartupAttributes_Implementation()
 {
-	PlayerInitializeStartupAttributes(); 
+	PlayerInitializeStartupAttributes();
 	InitializeAbilities(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->DataPerCharacter[CombatCharacter->GetCharacterID()].StartUpAbilities);
 }
 void UAuraASC::InitializeAbilities(TArray<FGameplayTag> AbilitiesTags)
 {
 	if (Cast<APawn>(GetAvatarActor())->HasAuthority())
-	{
 		for (const auto& temp : AbilitiesTags)
 			GiveAbility(FGameplayAbilitySpec(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->AbilitiesClasses[temp].AbilityClass));
-	}
 }
 void UAuraASC::OnDeath() const
 {
@@ -249,17 +325,19 @@ void UAuraASC::PlayerInputs()
 	if (!Cast<APawn>(GetAvatarActor())->IsLocallyControlled()) return;
 	UAuraSubSystem::GetAuraSubSystem(this)->OnInputPressed.AddLambda([this](FGameplayTag Key)
 	{
-		TryActivateAbilitiesByTag(Key.GetSingleTagContainer());
+		if (AbilityInputBindings.FindKey(Key))
+			TryActivateAbilitiesByTag(AbilityInputBindings.FindKey(Key)->GetSingleTagContainer());
 	});
 	UAuraSubSystem::GetAuraSubSystem(this)->OnInputReleased.AddLambda([this](FGameplayTag Key)
 	{
 		TArray<FGameplayAbilitySpec*> MatchingGameplayAbilities;
-		GetActivatableGameplayAbilitySpecsByAllMatchingTags(Key.GetSingleTagContainer(),MatchingGameplayAbilities);
+		if (AbilityInputBindings.FindKey(Key))
+			GetActivatableGameplayAbilitySpecsByAllMatchingTags(AbilityInputBindings.FindKey(Key)->GetSingleTagContainer(),MatchingGameplayAbilities);
 		if (MatchingGameplayAbilities.Num() == 0) 
 			return;
 		FGameplayTagContainer ReleaseInputsAbilities;
-		ReleaseInputsAbilities.AddTag(Aura::Abilities::Arcane);
-		ReleaseInputsAbilities.AddTag(Aura::Abilities::Electrocute);
+		ReleaseInputsAbilities.AddTag(Aura::Abilities::Attack::Arcane);
+		ReleaseInputsAbilities.AddTag(Aura::Abilities::Attack::Electrocute);
 		if (MatchingGameplayAbilities[0]->Ability.Get()->GetAssetTags().HasAnyExact(ReleaseInputsAbilities))
 			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased,MatchingGameplayAbilities[0]->Handle,
 				MatchingGameplayAbilities[0]->GetPrimaryInstance()->GetCurrentActivationInfo().GetActivationPredictionKey());

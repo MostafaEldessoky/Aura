@@ -113,6 +113,8 @@ USTRUCT(BlueprintType) struct FAbilitiesData
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayAbility> AbilityClass;
 	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag AbilityInputTag;
+	UPROPERTY(EditDefaultsOnly)
 	EDamageType DamageType;
 	UPROPERTY(EditDefaultsOnly)
 	FScalableFloat Damage;

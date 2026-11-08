@@ -56,17 +56,23 @@ void UProgressBarWidget::NativeOnInitialized()
 		case EProgressBarType::INPUTBARS :
 			{
 				auto temp = InstanceStruct.Get<FProgressBarInputData>();
-				auto AbilityTag = temp.AbilityTag;
-				if (! AbilityTag.IsValid()) 
-					return;
-				ProgressBar->SetPercent(1.f);
-				ProgressBar->SetWidgetStyle(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->UIAbilitiesData[AbilityTag].AbilityImage);
-				UAuraSubSystem::GetAuraSubSystem(this)->OnCooldownStart.AddLambda([this,AbilityTag](FGameplayTag Tag,float Duration)
+				UAuraSubSystem::GetAuraSubSystem(this)->OnGiveAbility.AddLambda([this,temp](FGameplayTagContainer Container)
 				{
-					if (!AbilityTag.IsValid() || !UAuraSubSystem::GetAuraSubSystem(this)->AuraData->UIAbilitiesData[AbilityTag].CooldownTag.MatchesTagExact(Tag))
-						return;
-						CurrentCooldownDuration = 0;
-						SetCooldownPercent(Duration);
+					if (Container.HasTagExact(temp.InputTag))
+						for (const auto& AbilityTag : Container)
+							if (AbilityTag.MatchesTag(Aura::Abilities::Abilities))
+							{
+								ProgressBar->SetWidgetStyle(UAuraSubSystem::GetAuraSubSystem(this)->AuraData->UIAbilitiesData[AbilityTag].AbilityImage);
+								ProgressBar->SetPercent(1.f);
+								UAuraSubSystem::GetAuraSubSystem(this)->OnCooldownStart.AddLambda([this,AbilityTag](FGameplayTag Tag,float Duration)
+								{
+									if (!AbilityTag.IsValid() || !UAuraSubSystem::GetAuraSubSystem(this)->AuraData->UIAbilitiesData[AbilityTag].CooldownTag.MatchesTagExact(Tag))
+										return;
+										CurrentCooldownDuration = 0;
+										SetCooldownPercent(Duration);
+								});
+								break;
+							}
 				});
 			}
 			break;
@@ -87,12 +93,12 @@ void UProgressBarWidget::NativeOnInitialized()
 				}
 				UAuraSubSystem::GetAuraSubSystem(this)->OnGiveAbility.AddLambda([this,RequiresTagsToUnlock,UIAbilityData,AbilityTag](FGameplayTagContainer Container)
 				{
-					if (Container.HasTag(Aura::InputActions::InputActions) && Container.HasTagExact(AbilityTag))
+					if (Container.HasTagExact(AbilityTag))
 					{
 						ProgressBar->SetWidgetStyle(UIAbilityData.AbilityImage);
 						AbilityState = EProgressBarAbilityState::Equipped;
 					}
-					if (Container.HasTag(Aura::Abilities::Abilities) && RequiresTagsToUnlock.HasAnyExact(Container))
+					else if (Container.HasTag(Aura::Abilities::Abilities) && RequiresTagsToUnlock.HasAnyExact(Container))
 					{
 						CurrentRequirements++;
 						if (RequiresTagsToUnlock.Num() == CurrentRequirements)

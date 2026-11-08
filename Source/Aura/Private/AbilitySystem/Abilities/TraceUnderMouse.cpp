@@ -18,9 +18,10 @@ void UTraceUnderMouse::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 void UTraceUnderMouse::TraceUnderMouse()
 {
 	FHitResult HitResult;
+	if (!GetCurrentActorInfo() || !GetCurrentActorInfo()->PlayerController.IsValid())
+		return;
 	GetCurrentActorInfo()->PlayerController.Get()->GetHitResultUnderCursor(
-		UAuraSubSystem::GetAuraSubSystem(this)->AuraData->CollisionsData.MouseTraceChannel,
-		false,HitResult);
+		UAuraSubSystem::GetAuraSubSystem(this)->AuraData->CollisionsData.MouseTraceChannel,false,HitResult);
 	if (HitResult.GetActor() != GetAvatarActorFromActorInfo())
 	{
 		FGameplayEventData EventData;

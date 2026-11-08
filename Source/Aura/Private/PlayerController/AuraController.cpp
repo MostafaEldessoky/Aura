@@ -45,6 +45,10 @@ void AAuraController::SetupInputComponent()
 			{
 				UAuraSubSystem::GetAuraSubSystem(this)->OnToggleSpellTreeWidget.Broadcast();
 			}
+			else if (temp.Key.MatchesTagExact(Aura::UI::ToggleInGameMenuWidgets))
+			{
+				UAuraSubSystem::GetAuraSubSystem(this)->OnToggleInGameMenuWidget.Broadcast();
+			}
 			else if (temp.Key.MatchesTagExact(Aura::InputActions::RMB))
 				UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetPawn(),temp.Key,FGameplayEventData());
 			else 

@@ -31,8 +31,8 @@ private:
 	void Server_PlayerInitializeStartupAttributes();
 	UFUNCTION(Server, Reliable)
 	void Server_PlayerUnlockAbility(FGameplayTag AbilityTag);
-	UFUNCTION(Server, Reliable)
-	void Server_PlayerChangeAbilityInputBinding(FGameplayTagContainer AbilityToInputTags);
+	void PlayerSaveGame();
+	void PlayerLoadGame();
 	void PlayerUnlockAbility();
 	void PlayerLevelUpAbility();
 	void PlayerChangeAbilityInputBinding();
@@ -49,4 +49,5 @@ private:
 	void PlayerInputs();
 	TWeakObjectPtr<UAuraAttributes> AuraAttributes;
 	TScriptInterface<ICombat> CombatCharacter;
+	TMap<FGameplayTag, FGameplayTag> AbilityInputBindings;
 };

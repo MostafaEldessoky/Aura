@@ -35,6 +35,19 @@ void UMainWidget::NativeOnInitialized()
 			bIsSpellTreeWidgetVisible = false;
 		}
 	});
+	UAuraSubSystem::GetAuraSubSystem(this)->OnToggleInGameMenuWidget.AddLambda([this]()
+	{
+		if (!bIsInGameMenuWidgetVisible)
+		{
+			InGameMenuWidget->SetVisibility(ESlateVisibility::Visible);
+			bIsInGameMenuWidgetVisible = true;
+		}
+		else
+		{
+			InGameMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+			bIsInGameMenuWidgetVisible = false;
+		}
+	});
 }
 
 bool UMainWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent,

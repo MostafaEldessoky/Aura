@@ -3,18 +3,22 @@
 
 #include "GameMode/AuraGameMode.h"
 
-#include "GameMode/AuraSaveGame.h"
-#include "Kismet/GameplayStatics.h"
+#include "Data/Tags.h"
+#include "Engine/TargetPoint.h"
+#include "Statics/AuraSubSystem.h"
 
-void AAuraGameMode::SaveGame()
-{
-	if (UGameplayStatics::DoesSaveGameExist("SaveSlot", 0))
-		UGameplayStatics::DeleteGameInSlot("SaveSlot", 0);
-	auto SaveGame = UGameplayStatics::CreateSaveGameObject(UAuraSaveGame::StaticClass());
-	UGameplayStatics::SaveGameToSlot(SaveGame, "SaveSlot", 0);
-}
 
-UAuraSaveGame* AAuraGameMode::LoadGame()
+void AAuraGameMode::RestartPlayerAtPlayerStart(AController* NewPlayer, AActor* StartSpot)
 {
-	return Cast<UAuraSaveGame>(UGameplayStatics::LoadGameFromSlot("SaveSlot", 0));
+	auto SaveGame = UAuraSubSystem::GetAuraSubSystem(this)->AuraSaveGame;
+	if (SaveGame) 
+		for (const auto& temp : SaveGame->ObjectData)
+			if (temp.ID == Aura::Characters::Player)
+			{
+				TargetPoint = GetWorld()->SpawnActor<ATargetPoint>(ATargetPoint::StaticClass());
+				TargetPoint->SetActorTransform(temp.Transform);
+				Super::RestartPlayerAtPlayerStart(NewPlayer, TargetPoint);
+				return;
+			}
+	Super::RestartPlayerAtPlayerStart(NewPlayer, StartSpot);
 }

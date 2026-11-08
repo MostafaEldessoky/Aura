@@ -6,6 +6,7 @@
 #include "GameFramework/GameMode.h"
 #include "AuraGameMode.generated.h"
 
+class ATargetPoint;
 class UAuraSaveGame;
 /**
  * 
@@ -16,6 +17,8 @@ class AURA_API AAuraGameMode : public AGameMode
 	GENERATED_BODY()
 	
 public:
-	void SaveGame();
-	UAuraSaveGame* LoadGame();
+	virtual void RestartPlayerAtPlayerStart(AController* NewPlayer, AActor* StartSpot) override;
+private:
+	UPROPERTY()
+	ATargetPoint* TargetPoint;
 };

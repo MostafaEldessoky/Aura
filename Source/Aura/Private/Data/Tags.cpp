@@ -6,6 +6,12 @@ namespace Aura
 	namespace SetByCaller
 	{
 		UE_DEFINE_GAMEPLAY_TAG(Damage,"Aura.SetByCaller.Damage")
+		UE_DEFINE_GAMEPLAY_TAG(Health,"Aura.SetByCaller.Health")
+		UE_DEFINE_GAMEPLAY_TAG(Mana,"Aura.SetByCaller.Mana")
+		UE_DEFINE_GAMEPLAY_TAG(XP,"Aura.SetByCaller.XP")
+		UE_DEFINE_GAMEPLAY_TAG(Strength,"Aura.SetByCaller.Strength")
+		UE_DEFINE_GAMEPLAY_TAG(Agility,"Aura.SetByCaller.Agility")
+		UE_DEFINE_GAMEPLAY_TAG(Intelligence,"Aura.SetByCaller.Intelligence")
 	}
 	namespace Characters
 	{
@@ -38,6 +44,7 @@ namespace Aura
 		UE_DEFINE_GAMEPLAY_TAG(ManaUp,"Aura.Effects.ManaUp")
 		UE_DEFINE_GAMEPLAY_TAG(StopMove,"Aura.Effects.StopMove")
 		UE_DEFINE_GAMEPLAY_TAG(CosumeXP,"Aura.Effects.CosumeXP")
+		UE_DEFINE_GAMEPLAY_TAG(LoadSetByCaller,"Aura.Effects.LoadSetByCaller")
 	}
 	namespace Cooldown
 	{
@@ -54,25 +61,30 @@ namespace Aura
 		UE_DEFINE_GAMEPLAY_TAG(Abilities,"Aura.Abilities")
 		namespace Passive
 		{
+			UE_DEFINE_GAMEPLAY_TAG(Passive,"Aura.Abilities.Passive")
 			UE_DEFINE_GAMEPLAY_TAG(CriticalChance,"Aura.Abilities.Passive.CriticalChance")
 			UE_DEFINE_GAMEPLAY_TAG(LifeSteal,"Aura.Abilities.Passive.LifeSteal")
 			UE_DEFINE_GAMEPLAY_TAG(PhysicalPenetration,"Aura.Abilities.Passive.PhysicalPenetration")
 			UE_DEFINE_GAMEPLAY_TAG(MagicalPenetration,"Aura.Abilities.Passive.MagicalPenetration")
 			
 		}
-		UE_DEFINE_GAMEPLAY_TAG(FireBall,"Aura.Abilities.FireBall")
-		UE_DEFINE_GAMEPLAY_TAG(HomingFireBall,"Aura.Abilities.HomingFireBall")
-		UE_DEFINE_GAMEPLAY_TAG(Arcane,"Aura.Abilities.Arcane")
-		UE_DEFINE_GAMEPLAY_TAG(Electrocute,"Aura.Abilities.Electrocute")
-		UE_DEFINE_GAMEPLAY_TAG(FireBlest,"Aura.Abilities.FireBlest")
+		namespace Attack
+		{
+			UE_DEFINE_GAMEPLAY_TAG(Attack,"Aura.Abilities.Attack")
+			UE_DEFINE_GAMEPLAY_TAG(FireBall,"Aura.Abilities.Attack.FireBall")
+			UE_DEFINE_GAMEPLAY_TAG(HomingFireBall,"Aura.Abilities.Attack.HomingFireBall")
+			UE_DEFINE_GAMEPLAY_TAG(Arcane,"Aura.Abilities.Attack.Arcane")
+			UE_DEFINE_GAMEPLAY_TAG(Electrocute,"Aura.Abilities.Attack.Electrocute")
+			UE_DEFINE_GAMEPLAY_TAG(FireBlest,"Aura.Abilities.Attack.FireBlest")
+			UE_DEFINE_GAMEPLAY_TAG(MeleeAttack,"Aura.Abilities.Attack.MeleeAttack")
+			UE_DEFINE_GAMEPLAY_TAG(Summoning,"Aura.Abilities.Attack.Summoning")
+		}
 		UE_DEFINE_GAMEPLAY_TAG(KnockBack,"Aura.Abilities.KnockBack")
 		UE_DEFINE_GAMEPLAY_TAG(Stun,"Aura.Abilities.Stun")
 		UE_DEFINE_GAMEPLAY_TAG(HighLight,"Aura.Abilities.HighLight")
 		UE_DEFINE_GAMEPLAY_TAG(TraceUnderMouse,"Aura.Abilities.TraceUnderMouse")
 		UE_DEFINE_GAMEPLAY_TAG(MoveTo,"Aura.Abilities.MoveTo")
 		UE_DEFINE_GAMEPLAY_TAG(StopMove,"Aura.Abilities.StopMove")
-		UE_DEFINE_GAMEPLAY_TAG(MeleeAttack,"Aura.Abilities.MeleeAttack")
-		UE_DEFINE_GAMEPLAY_TAG(Summoning,"Aura.Abilities.Summoning")
 		UE_DEFINE_GAMEPLAY_TAG(HitReact,"Aura.Abilities.HitReact")
 		UE_DEFINE_GAMEPLAY_TAG(Death,"Aura.Abilities.Death")
 	}
@@ -87,6 +99,7 @@ namespace Aura
 	{
 		UE_DEFINE_GAMEPLAY_TAG(ToggleAttributeWidgets,"Aura.UI.ToggleAttributeWidgets")
 		UE_DEFINE_GAMEPLAY_TAG(ToggleSpellTreeWidgets,"Aura.UI.ToggleSpellTreeWidgets")
+		UE_DEFINE_GAMEPLAY_TAG(ToggleInGameMenuWidgets,"Aura.UI.ToggleInGameMenuWidgets")
 		UE_DEFINE_GAMEPLAY_TAG(PickUp,"Aura.UI.PickUp")
 	}
 	namespace InputMappingContexts
