@@ -2,9 +2,15 @@
 
 
 #include "Statics/AuraSubSystem.h"
+
+#include "OnlineSessionSettings.h"
+#include "OnlineSubsystem.h"
 #include "Data/AuraData.h"
+#include "Data/Tags.h"
 #include "GameMode/AuraSaveGameSlotData.h"
 #include "Kismet/GameplayStatics.h"
+#include "Online/OnlineSessionNames.h"
+
 
 UAuraSubSystem* UAuraSubSystem::GetAuraSubSystem(const UObject* WorldContextObject)
 {
@@ -104,4 +110,102 @@ void UAuraSubSystem::Initialize(FSubsystemCollectionBase& Collection)
 			UGameplayStatics::SaveGameToSlot(AuraSaveGameSlotData,"DEFAULT",0);
 		}
 	});
+}
+
+void UAuraSubSystem::OnlineCreateSession()
+{
+	if (IOnlineSubsystem::Get()->GetSessionInterface()->GetNamedSession(NAME_GameSession))
+		return;
+	FDelegateHandle temp;
+	OnCreateSessionCompleteDelegate.BindLambda([this,&temp](FName SessionName, bool bWasSuccessful)
+	{
+		// can implement players slots to be completed then travel to game map 
+		IOnlineSubsystem::Get()->GetSessionInterface()->ClearOnCreateSessionCompleteDelegate_Handle(temp);
+	});
+	temp = IOnlineSubsystem::Get()->GetSessionInterface()->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
+	FOnlineSessionSettings SessionSettings;
+	SessionSettings.bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? false : true;
+	SessionSettings.bShouldAdvertise = true;
+	SessionSettings.bAllowJoinInProgress = false;
+	SessionSettings.NumPublicConnections = 6;
+	SessionSettings.bUsesPresence = true;
+	SessionSettings.bUseLobbiesIfAvailable = true;
+	SessionSettings.bAllowJoinViaPresence = true;
+	SessionSettings.bIsDedicated = false;
+	SessionSettings.Set(FName("GameType"),FString("Team"),EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	if (!IOnlineSubsystem::Get()->GetSessionInterface()->CreateSession(*GetWorld()->GetFirstLocalPlayerFromController()->GetPreferredUniqueNetId(),NAME_GameSession,SessionSettings))
+	{
+		IOnlineSubsystem::Get()->GetSessionInterface()->ClearOnCreateSessionCompleteDelegate_Handle(temp);
+	}
+}
+
+void UAuraSubSystem::OnlineFindSession()
+{
+	TSharedPtr<FOnlineSessionSearch> OnlineSessionSearch = MakeShared<FOnlineSessionSearch>();
+	OnlineSessionSearch->MaxSearchResults = 10000;
+	OnlineSessionSearch->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? false : true;
+	OnlineSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+	FDelegateHandle temp;
+	OnFindSessionsCompleteDelegate.BindLambda([this,&temp,OnlineSessionSearch](bool bWasSuccessful)
+	{
+		for (auto& temp1 : OnlineSessionSearch->SearchResults)
+		{
+			FString SearchString;
+			temp1.Session.SessionSettings.Get(FName("GameType"),SearchString);
+			if (SearchString == FString("Team"))
+				OnListOfSessions.Broadcast(temp1);
+		}
+		IOnlineSubsystem::Get()->GetSessionInterface()->ClearOnFindSessionsCompleteDelegate_Handle(temp);
+	});
+	temp = IOnlineSubsystem::Get()->GetSessionInterface()->AddOnFindSessionsCompleteDelegate_Handle(OnFindSessionsCompleteDelegate);
+	if (!IOnlineSubsystem::Get()->GetSessionInterface()->FindSessions(*GetWorld()->GetFirstLocalPlayerFromController()->GetPreferredUniqueNetId(),OnlineSessionSearch.ToSharedRef()))
+	{
+		IOnlineSubsystem::Get()->GetSessionInterface()->ClearOnFindSessionsCompleteDelegate_Handle(temp);
+	}
+}
+
+void UAuraSubSystem::OnlineJoinSession(FOnlineSessionSearchResult SessionResult)
+{
+	FDelegateHandle temp;
+	OnJoinSessionCompleteDelegate.BindLambda([this,&temp]( FName SessionName, EOnJoinSessionCompleteResult::Type Result )
+	{
+		FString ConnectString;
+		IOnlineSubsystem::Get()->GetSessionInterface()->GetResolvedConnectString(SessionName,ConnectString);
+		GetGameInstance()->GetFirstLocalPlayerController()->ClientTravel(ConnectString,TRAVEL_Absolute);
+		IOnlineSubsystem::Get()->GetSessionInterface()->ClearOnJoinSessionCompleteDelegate_Handle(temp);
+	});
+	temp = IOnlineSubsystem::Get()->GetSessionInterface()->AddOnJoinSessionCompleteDelegate_Handle(OnJoinSessionCompleteDelegate);
+	if (!IOnlineSubsystem::Get()->GetSessionInterface()->JoinSession(*GetWorld()->GetFirstLocalPlayerFromController()->GetPreferredUniqueNetId(),NAME_GameSession,SessionResult))
+	{
+		IOnlineSubsystem::Get()->GetSessionInterface()->ClearOnJoinSessionCompleteDelegate_Handle(temp);
+	}
+}
+
+void UAuraSubSystem::OnlineStartSession(FString Map)
+{
+	FDelegateHandle temp;
+	OnStartSessionCompleteDelegate.BindLambda([this,&temp,Map]( FName SessionName, bool bWasSuccessful )
+	{
+		GetWorld()->ServerTravel(Map,true);
+		IOnlineSubsystem::Get()->GetSessionInterface()->ClearOnStartSessionCompleteDelegate_Handle(temp);
+	});
+	temp = IOnlineSubsystem::Get()->GetSessionInterface()->AddOnStartSessionCompleteDelegate_Handle(OnStartSessionCompleteDelegate);
+	if (!IOnlineSubsystem::Get()->GetSessionInterface()->StartSession(NAME_GameSession))
+	{
+		IOnlineSubsystem::Get()->GetSessionInterface()->ClearOnStartSessionCompleteDelegate_Handle(temp);
+	}
+}
+
+void UAuraSubSystem::OnlineDestroySession()
+{
+	FDelegateHandle temp;
+	OnDestroySessionCompleteDelegate.BindLambda([this,&temp]( FName SessionName, bool bWasSuccessful )
+	{
+		IOnlineSubsystem::Get()->GetSessionInterface()->ClearOnDestroySessionCompleteDelegate_Handle(temp);
+	});
+	temp = IOnlineSubsystem::Get()->GetSessionInterface()->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
+	if (!IOnlineSubsystem::Get()->GetSessionInterface()->DestroySession(NAME_GameSession,OnDestroySessionCompleteDelegate))
+	{
+		IOnlineSubsystem::Get()->GetSessionInterface()->ClearOnDestroySessionCompleteDelegate_Handle(temp);
+	}
 }

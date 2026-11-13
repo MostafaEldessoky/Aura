@@ -28,6 +28,4 @@ private:
 	UAuraSaveGameSlotData* SaveGameSlotData{nullptr};
 	UPROPERTY()
 	TArray<ULoadWidget*> LoadWidgets;
-	UPROPERTY()
-	TArray<UPanelSlot*> LoadWidgetSlots;
 };

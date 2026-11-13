@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
-#include "AuraGameMode.generated.h"
+#include "AuraOfflineGameMode.generated.h"
 
 class ATargetPoint;
 class UAuraSaveGame;
@@ -12,7 +12,7 @@ class UAuraSaveGame;
  * 
  */
 UCLASS()
-class AURA_API AAuraGameMode : public AGameMode
+class AURA_API AAuraOfflineGameMode : public AGameMode
 {
 	GENERATED_BODY()
 	

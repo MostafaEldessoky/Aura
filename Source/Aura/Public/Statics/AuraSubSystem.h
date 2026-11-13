@@ -6,6 +6,10 @@
 
 #include "GameplayTagContainer.h"
 #include "GameMode/AuraSaveGame.h"
+#include "Interfaces/OnlineGameMatchesInterface.h"
+#include "Interfaces/OnlinePartyInterface.h"
+#include "Interfaces/OnlineSessionDelegates.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "AuraSubSystem.generated.h"
 
@@ -30,6 +34,7 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnLoadGameSlotSelected,FString,int32)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnSaveGameToSlotNeeded,FString,int32)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnSaveGameNeeded,TArray<FSaveGameBase>&)
 DECLARE_MULTICAST_DELEGATE(FOnLoadGameNeeded)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnListOfSessions,FOnlineSessionSearchResult)
 
 
 /**
@@ -51,6 +56,11 @@ public:
 	UAuraSaveGame* AuraSaveGame{nullptr};
 	UPROPERTY()
 	UAuraSaveGameSlotData* AuraSaveGameSlotData{nullptr};
+	void OnlineCreateSession();
+	void OnlineFindSession();
+	void OnlineJoinSession(FOnlineSessionSearchResult SessionResult);
+	void OnlineStartSession(FString Map);
+	void OnlineDestroySession();
 	FOnInputPressed OnInputPressed;
 	FOnInputReleased OnInputReleased;
     FOnPickedUpEffectItem OnPickedUpEffectItem;
@@ -67,9 +77,16 @@ public:
 	FOnToggleWidget OnToggleInGameMenuWidget;
 	FOnToggleWidget OnToggleSaveWidget;
 	FOnToggleWidget OnToggleLoadWidget;
+	FOnToggleWidget OnToggleFindSessionWidget;
 	FOnLoadGameSlotSelected OnLoadGameSlotSelected;
 	FOnLoadGameSlotSelected OnLoadGameSlotDeleted;
 	FOnSaveGameToSlotNeeded OnSaveGameToSlotNeeded;
 	FOnSaveGameNeeded OnSaveGameNeeded;
 	FOnLoadGameNeeded OnLoadGameNeeded;
+	FOnListOfSessions OnListOfSessions;
+	FOnCreateSessionCompleteDelegate OnCreateSessionCompleteDelegate;
+	FOnFindSessionsCompleteDelegate OnFindSessionsCompleteDelegate;
+	FOnJoinSessionCompleteDelegate OnJoinSessionCompleteDelegate;
+	FOnStartSessionCompleteDelegate OnStartSessionCompleteDelegate;
+	FOnDestroySessionCompleteDelegate OnDestroySessionCompleteDelegate;
 };
